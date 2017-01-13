@@ -21,20 +21,20 @@ namespace UnitTestProject
             player.ViewingAngle = 45;
             
             //Act
-            var collisionPoint = map.GetFirstVerticalCoordinateIntersection(player, 10);
+            var collisionPoint = map.GetVerticalCollision(player.Position,MathHelper.ToRadians( player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(Vector2.One * 2, collisionPoint.Value, "The two values are not the same");
 
             //Act
             player.ViewingAngle = 0;
-            collisionPoint = map.GetFirstVerticalCoordinateIntersection(player, 10);
+            collisionPoint = map.GetVerticalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(new Vector2(2,player.Position.Y), collisionPoint.Value, "The two values are not the same");
 
             //Act
             player.Position = Vector2.One * 1.25f;
             player.ViewingAngle = 180;
-            collisionPoint = map.GetFirstVerticalCoordinateIntersection(player, 10);
+            collisionPoint = map.GetVerticalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(new Vector2(1,1.25f), collisionPoint.Value, "The two values are not the same");
         }
@@ -48,20 +48,20 @@ namespace UnitTestProject
             player.ViewingAngle = 45;
 
             //Act
-            var collisionPoint = map.GetFirstHorizontalCoordinateIntersection(player, 10);
+            var collisionPoint = map.GetHorizontalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(new Vector2(2,1), collisionPoint.Value, "The two values are not the same");
 
             //Act
             player.ViewingAngle = 90;
-            collisionPoint = map.GetFirstHorizontalCoordinateIntersection(player, 10);
+            collisionPoint = map.GetHorizontalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(new Vector2(1.5f, 1), collisionPoint.Value, "The two values are not the same");
 
             //Act
             player.Position = Vector2.One * 1.25f;
             player.ViewingAngle = 315;
-            collisionPoint = map.GetFirstHorizontalCoordinateIntersection(player, 10);
+            collisionPoint = map.GetHorizontalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             Assert.IsTrue(Vector2.Distance(collisionPoint.Value, new Vector2(2, 2)) < .0001, "The two values are not the same");
         }

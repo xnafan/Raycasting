@@ -42,9 +42,9 @@ namespace Raycasting
 
         public static Vector2? GetCollisionPointImproved(this int[,] map, Vector2 position, float angleInRadians, float maxDistance)
         {
-            var closestHorizontalCollision = GetFirstHorizontalCoordinateIntersection(map, position, angleInRadians, maxDistance);
+            var closestHorizontalCollision = GetHorizontalCollision(map, position, angleInRadians, maxDistance);
             
-            var closestVerticalCollision = GetFirstVerticalCoordinateIntersection(map, position, angleInRadians, maxDistance);
+            var closestVerticalCollision = GetVerticalCollision(map, position, angleInRadians, maxDistance);
 
             if (closestHorizontalCollision.HasValue && closestVerticalCollision.HasValue)
             {
@@ -59,108 +59,82 @@ namespace Raycasting
             return null;
         }
 
-        //public static Vector2? GetCollisionPointByOnlyCheckingWhenCrossingBoundariesBetweenSquares(this int[,] map, Player player)
-        //{
-        //    float maxDistance = 20;
-        //    Vector2 directionOfRay = GetAngleAsVector(angleInRadians);
-        //    Vector2 farthestVisiblePositionForRay = position + directionOfRay * maxDistance;
-        //    Vector2? firstVerticalWallIntersection = GetFirstVerticalCoordinateIntersection(map, player, farthestVisiblePositionForRay, directionOfRay);
 
-        //    return firstVerticalWallIntersection;
-        //}
-
-        public static Vector2? GetFirstVerticalCoordinateIntersection(this int[,] map, Vector2 position, float directionInRadian, float maxDistance)
+        public static Vector2? GetVerticalCollision(this int[,] map, Vector2 position, float directionInDegrees, float maxDistance)
         {
+            if (directionInDegrees == 0) { return new Vector2((float)Math.Ceiling(position.X), position.Y); }
+            if (directionInDegrees == 180) { return new Vector2((float)Math.Floor(position.X), position.Y); }
+            if (directionInDegrees == 90 || directionInDegrees == 270) { return null; }
+
             int firstXCoordinateToCheck = 0;
             int lastXCoordinateToCheck = 0;
-            if (directionInRadian == 0) { return new Vector2((float)Math.Ceiling(position.X), position.Y); }
-            if (directionInRadian == 180) { return new Vector2((float)Math.Floor(position.X), position.Y); }
-            if (directionInRadian == 90 || directionInRadian == 270) { return null; }
-
-            
-
+            var directionInRadian = MathHelper.ToRadians(directionInDegrees);
             Vector2 directionAsVector = directionInRadian.AngleAsVector();
-            Vector2 endingPosition = position + (directionAsVector * maxDistance);
-            Vector2 directionOfRay = new Vector2(Math.Sign(directionAsVector.X), (float)Math.Tan(directionInRadian));
-            int xChange = (int)directionOfRay.X;
-            float xTestOffset = xChange * .1f;
-            int yChange = Math.Sign(directionOfRay.Y);
-            float yTestOffset = yChange * .1f;
 
-            if (directionAsVector.X == 0) { return null; }
-            else if (directionAsVector.X < 0)
+            if (directionAsVector.X < 0)
             {
                 firstXCoordinateToCheck = (int)Math.Floor(position.X);
-                lastXCoordinateToCheck = (int)Math.Ceiling(endingPosition.X);
+                lastXCoordinateToCheck = 0;
             }
             else
             {
                 firstXCoordinateToCheck = (int)Math.Ceiling(position.X);
-                lastXCoordinateToCheck = (int)Math.Floor(endingPosition.X);
+                lastXCoordinateToCheck = map.GetLength(0)-1;
             }
-
-            int numberOfXCoordinatesToCheck = Math.Abs(lastXCoordinateToCheck - firstXCoordinateToCheck) + 1;
-            float xFraction = firstXCoordinateToCheck - position.X;
-            float firstY = xFraction * directionOfRay.Y + position.Y;
-
-            for (int deltaX = 0; deltaX < numberOfXCoordinatesToCheck; deltaX++)
+            int deltaX = Math.Sign(lastXCoordinateToCheck - firstXCoordinateToCheck);
+            var line = LineFormula.FromCoordinateAndDirection(position, directionInRadian);
+            bool done = false;
+            for (int x = firstXCoordinateToCheck; !done; x += deltaX)
             {
-                float yCoordinate = firstY + directionOfRay.Y * deltaX;
-                int xCoordinate = firstXCoordinateToCheck + deltaX * xChange;
-                Vector2 coordinateToCheck = new Vector2(xCoordinate + xTestOffset, yCoordinate + yTestOffset);
-                if (!map.Contains((int)coordinateToCheck.X, (int)coordinateToCheck.Y)) return null;
-                if (map[(int)coordinateToCheck.X, (int)coordinateToCheck.Y] != 0)
+                var y = line.GetInterSectWithVerticalLine(x);
+                var realX = x - (deltaX < 0 ? 1 : 0);
+                if (!y.HasValue || !map.Contains(realX, (int)y.Value)) { return null; }
+                if (map[realX, (int)y.Value] != 0)
                 {
-                    return new Vector2(xCoordinate, yCoordinate);
+                    return new Vector2(x,y.Value);
                 }
+                if(x == lastXCoordinateToCheck) { done = true; }
             }
             return null;
         }
 
-        public static Vector2? GetFirstHorizontalCoordinateIntersection(this int[,] map, Vector2 position, float directionInRadian, float maxDistance)
+        public static Vector2? GetHorizontalCollision(this int[,] map, Vector2 position, float directionInDegrees, float maxDistance)
         {
             int firstYCoordinateToCheck = 0;
             int lastYCoordinateToCheck = 0;
-            if (directionInRadian == 90) { return new Vector2(position.X, (float)Math.Floor(position.Y)); }
-            if (directionInRadian == 270) { return new Vector2(position.X, (float)Math.Ceiling(position.Y)); }
-            if (directionInRadian == 0 || directionInRadian == 180) { return null; }
+            if (directionInDegrees== 90) { return new Vector2(position.X, (float)Math.Floor(position.Y)); }
+            if (directionInDegrees == 270) { return new Vector2(position.X, (float)Math.Ceiling(position.Y)); }
+            if (directionInDegrees == 0 || directionInDegrees == 180) { return null; }
 
-            Vector2 directionAsVector = new Vector2((float)Math.Cos(directionInRadian), -(float)Math.Sin(directionInRadian));
-            Vector2 endingPosition = position + (directionAsVector * maxDistance);
-            Vector2 directionOfRay = new Vector2(Math.Sign(directionAsVector.X), -(float)Math.Tan(directionInRadian));
-            int xChange = (int)directionOfRay.X;
-            float xTestOffset = xChange * .1f;
-            int yChange = Math.Sign(directionOfRay.Y);
-            float yTestOffset = yChange * .1f;
+            float directionInRadian = (float) MathHelper.ToRadians(directionInDegrees);
 
-            if (directionAsVector.Y == 0) { return null; }
-            else if (directionAsVector.Y < 0)
+            Vector2 directionAsVector = new Vector2((float)Math.Cos(directionInRadian), (float)Math.Sin(directionInRadian));
+          
+
+            if (directionAsVector.Y < 0)
             {
                 firstYCoordinateToCheck = (int)Math.Floor(position.Y);
-                lastYCoordinateToCheck = (int)Math.Ceiling(endingPosition.Y);
+                lastYCoordinateToCheck = 0;
             }
             else
             {
                 firstYCoordinateToCheck = (int)Math.Ceiling(position.Y);
-                lastYCoordinateToCheck = (int)Math.Floor(endingPosition.Y);
+                lastYCoordinateToCheck = map.GetLength(1)-1;
             }
 
-            float xPerY = 1 / directionOfRay.Y;
-            int numberOfYCoordinatesToCheck = Math.Abs(lastYCoordinateToCheck - firstYCoordinateToCheck) + 1;
-            float yFraction = firstYCoordinateToCheck - position.Y;
-
-            for (int deltaY = 0; deltaY < numberOfYCoordinatesToCheck; deltaY++)
+            int deltaY = Math.Sign(lastYCoordinateToCheck - firstYCoordinateToCheck);
+            var line = LineFormula.FromCoordinateAndDirection(position, directionInRadian);
+            bool done = false;
+            for (int y = firstYCoordinateToCheck; !done; y += deltaY)
             {
-                
-                int yCoordinate = firstYCoordinateToCheck + deltaY * yChange;
-                float yDifference = yCoordinate - position.Y;
-                float xCoordinate = position.X + yDifference * xPerY;
-                Vector2 coordinateToCheck = new Vector2(xCoordinate + xTestOffset, yCoordinate + yTestOffset);
-                if (!map.Contains((int)coordinateToCheck.X, (int)coordinateToCheck.Y)) return null;
-                if (map[(int)coordinateToCheck.X, (int)coordinateToCheck.Y] != 0)
+                var x = line.GetInterSectWithHorizontalLine(y);
+                var realY = y - (deltaY < 0 ? 1 : 0);
+                if (!x.HasValue || !map.Contains((int)x.Value,realY)) { return null; }
+                if (map[(int)x.Value, realY] != 0)
                 {
-                    return new Vector2(xCoordinate, yCoordinate);
+                    return new Vector2(x.Value, y);
                 }
+                if (y == lastYCoordinateToCheck) { done = true; }
             }
             return null;
         }

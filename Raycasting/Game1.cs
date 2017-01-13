@@ -57,6 +57,7 @@ namespace Raycasting
                     }
                 }
             }
+            _maze[2, 2] = 1;
             var tilesInAll = _maze.GetLength(0) * _maze.GetLength(1);
             int tilesToFill = tilesInAll / 7;
             for (int i = 0; i < tilesToFill ; i++)
@@ -67,7 +68,7 @@ namespace Raycasting
             _player = new Player(_maze);
             _pixelsPerDegreeOfViewingAngleFromSourceBitmap = _textures[0][0].Width / _viewingAngle;
             _pixelsPerDegreeOfViewingAngleFromViewArea = _widthOfViewingField / (_viewingAngle*_raysPerDegreeOrResolutionIfYoudRatherCallItThat);
-            _player.Position = new Vector2(1.5f, 1.5f);
+            _player.Position = new Vector2(2.5f, 3.5f);
             _maze[(int)_player.Position.X, (int)_player.Position.Y] = 0;
             _player.ViewingAngle = 0;
             _font = Content.Load<SpriteFont>("DefaultFont");
@@ -96,7 +97,8 @@ namespace Raycasting
             base.Draw(gameTime);
             //_spriteBatch.Draw(_wallImage, Vector2.One * 64,  Color.White);
             float degreePerPixel = _viewingAngle /_widthOfViewingField;
-            for (float deltaAngle = 0; deltaAngle < _viewingAngle; deltaAngle += 1/(float)_raysPerDegreeOrResolutionIfYoudRatherCallItThat)
+            for (float deltaAngle = 0; deltaAngle < _viewingAngle; deltaAngle += 1  /(float)_raysPerDegreeOrResolutionIfYoudRatherCallItThat
+                )
             {
                 var realAngle = deltaAngle - _viewingAngle / 2;
                 
@@ -104,8 +106,8 @@ namespace Raycasting
                 var absoluteAngle = _player.ViewingAngle + realAngle;
 
                 float sourceBitmapPositionToGrabFrom = 0;
-                //var collisionPosition = _maze.GetCollisionPoint(_player.Position, MathHelper.ToRadians(absoluteAngle));
-                var collisionPosition = _maze.GetCollisionPointImproved(_player.Position, MathHelper.ToRadians( absoluteAngle), 100);
+               // var collisionPosition = _maze.GetCollisionPoint(_player.Position, MathHelper.ToRadians(absoluteAngle));
+               var collisionPosition = _maze.GetCollisionPointImproved(_player.Position,  absoluteAngle, 100);
                 //Console.WriteLine("ray-angle: " + realAngle + ", collision: " + collisionPosition);
                 float distanceToCollision = 1000;
                 if (collisionPosition.HasValue)
@@ -123,9 +125,11 @@ namespace Raycasting
                 if (textureIndex < 0) textureIndex = 0;
 
                 var sourceRectangle = new Rectangle((int)(sourceBitmapPositionToGrabFrom * _textures[_textureSetIndex][textureIndex].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, _textures[_textureSetIndex][textureIndex].Height);
-
+                
                 float percentageOfWidth = deltaAngle / _viewingAngle;
-                var destinationRectangle = new Rectangle((int)( _widthOfViewingField * percentageOfWidth), (int)((_heightOfViewingField - destinationHeight) / 2), _pixelsPerDegreeOfViewingAngleFromViewArea , (int)destinationHeight);
+                var destinationRectangle = new Rectangle((int)( _widthOfViewingField * percentageOfWidth), (int)((_heightOfViewingField - destinationHeight) / 2),
+                    _pixelsPerDegreeOfViewingAngleFromViewArea 
+                    , (int)destinationHeight);
                 
                 _spriteBatch.Draw(_textures[_textureSetIndex][textureIndex], destinationRectangle, sourceRectangle, Color.White);
             }

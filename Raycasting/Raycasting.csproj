@@ -71,6 +71,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CollisionInfo.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="ITextureGetter.cs" />
     <Compile Include="ImageGetterFromZipFiles.cs" />
