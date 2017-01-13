@@ -60,7 +60,7 @@ namespace Raycasting
 
         public override string ToString()
         {
-            return "Pos: " + this.Position + ", viewangle: " + this.ViewingAngle;
+            return "[Player] Position: " + this.Position + ", viewangle: " + this.ViewingAngle;
         }
 
         internal void TurnRight()

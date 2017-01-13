@@ -40,16 +40,16 @@ namespace Raycasting
             return null;
         }
 
-        public static Vector2? GetCollisionPointImproved(this int[,] map, Player player, float maxDistance)
+        public static Vector2? GetCollisionPointImproved(this int[,] map, Vector2 position, float angleInRadians, float maxDistance)
         {
-            var closestHorizontalCollision = GetFirstHorizontalCoordinateIntersection(map, player, maxDistance);
+            var closestHorizontalCollision = GetFirstHorizontalCoordinateIntersection(map, position, angleInRadians, maxDistance);
             
-            var closestVerticalCollision = GetFirstVerticalCoordinateIntersection(map, player, maxDistance);
+            var closestVerticalCollision = GetFirstVerticalCoordinateIntersection(map, position, angleInRadians, maxDistance);
 
             if (closestHorizontalCollision.HasValue && closestVerticalCollision.HasValue)
             {
-                var distanceToHorizontalLine = Vector2.DistanceSquared(player.Position, closestHorizontalCollision.Value);
-                var distanceToVerticalLine = Vector2.DistanceSquared(player.Position, closestVerticalCollision.Value);
+                var distanceToHorizontalLine = Vector2.DistanceSquared(position, closestHorizontalCollision.Value);
+                var distanceToVerticalLine = Vector2.DistanceSquared(position, closestVerticalCollision.Value);
 
                 if (distanceToHorizontalLine < distanceToVerticalLine) { return closestHorizontalCollision; }
                 else { return closestVerticalCollision; }
@@ -69,19 +69,18 @@ namespace Raycasting
         //    return firstVerticalWallIntersection;
         //}
 
-        public static Vector2? GetFirstVerticalCoordinateIntersection(this int[,] map, Player player, float maxDistance)
+        public static Vector2? GetFirstVerticalCoordinateIntersection(this int[,] map, Vector2 position, float directionInRadian, float maxDistance)
         {
             int firstXCoordinateToCheck = 0;
             int lastXCoordinateToCheck = 0;
+            if (directionInRadian == 0) { return new Vector2((float)Math.Ceiling(position.X), position.Y); }
+            if (directionInRadian == 180) { return new Vector2((float)Math.Floor(position.X), position.Y); }
+            if (directionInRadian == 90 || directionInRadian == 270) { return null; }
 
-            if (player.ViewingAngle == 0) { return new Vector2((float)Math.Ceiling(player.Position.X), player.Position.Y); }
-            if (player.ViewingAngle == 180) { return new Vector2((float)Math.Floor(player.Position.X), player.Position.Y); }
-            if (player.ViewingAngle == 90 || player.ViewingAngle == 270) { return null; }
-
-            float directionInRadian = MathHelper.ToRadians(player.ViewingAngle);
+            
 
             Vector2 directionAsVector = directionInRadian.AngleAsVector();
-            Vector2 endingPosition = player.Position + (directionAsVector * maxDistance);
+            Vector2 endingPosition = position + (directionAsVector * maxDistance);
             Vector2 directionOfRay = new Vector2(Math.Sign(directionAsVector.X), (float)Math.Tan(directionInRadian));
             int xChange = (int)directionOfRay.X;
             float xTestOffset = xChange * .1f;
@@ -91,18 +90,18 @@ namespace Raycasting
             if (directionAsVector.X == 0) { return null; }
             else if (directionAsVector.X < 0)
             {
-                firstXCoordinateToCheck = (int)Math.Floor(player.Position.X);
+                firstXCoordinateToCheck = (int)Math.Floor(position.X);
                 lastXCoordinateToCheck = (int)Math.Ceiling(endingPosition.X);
             }
             else
             {
-                firstXCoordinateToCheck = (int)Math.Ceiling(player.Position.X);
+                firstXCoordinateToCheck = (int)Math.Ceiling(position.X);
                 lastXCoordinateToCheck = (int)Math.Floor(endingPosition.X);
             }
 
             int numberOfXCoordinatesToCheck = Math.Abs(lastXCoordinateToCheck - firstXCoordinateToCheck) + 1;
-            float xFraction = firstXCoordinateToCheck - player.Position.X;
-            float firstY = xFraction * directionOfRay.Y + player.Position.Y;
+            float xFraction = firstXCoordinateToCheck - position.X;
+            float firstY = xFraction * directionOfRay.Y + position.Y;
 
             for (int deltaX = 0; deltaX < numberOfXCoordinatesToCheck; deltaX++)
             {
@@ -118,17 +117,16 @@ namespace Raycasting
             return null;
         }
 
-        public static Vector2? GetFirstHorizontalCoordinateIntersection(this int[,] map, Player player, float maxDistance)
+        public static Vector2? GetFirstHorizontalCoordinateIntersection(this int[,] map, Vector2 position, float directionInRadian, float maxDistance)
         {
             int firstYCoordinateToCheck = 0;
             int lastYCoordinateToCheck = 0;
-            if (player.ViewingAngle == 90) { return new Vector2(player.Position.X, (float)Math.Floor(player.Position.Y)); }
-            if (player.ViewingAngle == 270) { return new Vector2(player.Position.X, (float)Math.Ceiling(player.Position.Y)); }
-            if (player.ViewingAngle == 0 || player.ViewingAngle == 180) { return null; }
+            if (directionInRadian == 90) { return new Vector2(position.X, (float)Math.Floor(position.Y)); }
+            if (directionInRadian == 270) { return new Vector2(position.X, (float)Math.Ceiling(position.Y)); }
+            if (directionInRadian == 0 || directionInRadian == 180) { return null; }
 
-            float directionInRadian = MathHelper.ToRadians(player.ViewingAngle);
             Vector2 directionAsVector = new Vector2((float)Math.Cos(directionInRadian), -(float)Math.Sin(directionInRadian));
-            Vector2 endingPosition = player.Position + (directionAsVector * maxDistance);
+            Vector2 endingPosition = position + (directionAsVector * maxDistance);
             Vector2 directionOfRay = new Vector2(Math.Sign(directionAsVector.X), -(float)Math.Tan(directionInRadian));
             int xChange = (int)directionOfRay.X;
             float xTestOffset = xChange * .1f;
@@ -138,25 +136,25 @@ namespace Raycasting
             if (directionAsVector.Y == 0) { return null; }
             else if (directionAsVector.Y < 0)
             {
-                firstYCoordinateToCheck = (int)Math.Floor(player.Position.Y);
+                firstYCoordinateToCheck = (int)Math.Floor(position.Y);
                 lastYCoordinateToCheck = (int)Math.Ceiling(endingPosition.Y);
             }
             else
             {
-                firstYCoordinateToCheck = (int)Math.Ceiling(player.Position.Y);
+                firstYCoordinateToCheck = (int)Math.Ceiling(position.Y);
                 lastYCoordinateToCheck = (int)Math.Floor(endingPosition.Y);
             }
 
             float xPerY = 1 / directionOfRay.Y;
             int numberOfYCoordinatesToCheck = Math.Abs(lastYCoordinateToCheck - firstYCoordinateToCheck) + 1;
-            float yFraction = firstYCoordinateToCheck - player.Position.Y;
+            float yFraction = firstYCoordinateToCheck - position.Y;
 
             for (int deltaY = 0; deltaY < numberOfYCoordinatesToCheck; deltaY++)
             {
                 
                 int yCoordinate = firstYCoordinateToCheck + deltaY * yChange;
-                float yDifference = yCoordinate - player.Position.Y;
-                float xCoordinate = player.Position.X + yDifference * xPerY;
+                float yDifference = yCoordinate - position.Y;
+                float xCoordinate = position.X + yDifference * xPerY;
                 Vector2 coordinateToCheck = new Vector2(xCoordinate + xTestOffset, yCoordinate + yTestOffset);
                 if (!map.Contains((int)coordinateToCheck.X, (int)coordinateToCheck.Y)) return null;
                 if (map[(int)coordinateToCheck.X, (int)coordinateToCheck.Y] != 0)
