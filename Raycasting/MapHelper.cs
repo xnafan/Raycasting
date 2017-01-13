@@ -40,7 +40,7 @@ namespace Raycasting
             return null;
         }
 
-        public static Vector2? GetCollisionPointImproved(this int[,] map, Vector2 position, float angleInRadians, float maxDistance)
+        public static CollisionInfo? GetCollisionPointImproved(this int[,] map, Vector2 position, float angleInRadians, float maxDistance)
         {
             var closestHorizontalCollision = GetHorizontalCollision(map, position, angleInRadians, maxDistance);
             
@@ -48,8 +48,8 @@ namespace Raycasting
 
             if (closestHorizontalCollision.HasValue && closestVerticalCollision.HasValue)
             {
-                var distanceToHorizontalLine = Vector2.DistanceSquared(position, closestHorizontalCollision.Value);
-                var distanceToVerticalLine = Vector2.DistanceSquared(position, closestVerticalCollision.Value);
+                var distanceToHorizontalLine = Vector2.DistanceSquared(position, closestHorizontalCollision.Value.CollisionPoint);
+                var distanceToVerticalLine = Vector2.DistanceSquared(position, closestVerticalCollision.Value.CollisionPoint);
 
                 if (distanceToHorizontalLine < distanceToVerticalLine) { return closestHorizontalCollision; }
                 else { return closestVerticalCollision; }
@@ -60,10 +60,15 @@ namespace Raycasting
         }
 
 
-        public static Vector2? GetVerticalCollision(this int[,] map, Vector2 position, float directionInDegrees, float maxDistance)
+        public static CollisionInfo? GetVerticalCollision(this int[,] map, Vector2 position, float directionInDegrees, float maxDistance)
         {
-            if (directionInDegrees == 0) { return new Vector2((float)Math.Ceiling(position.X), position.Y); }
-            if (directionInDegrees == 180) { return new Vector2((float)Math.Floor(position.X), position.Y); }
+            //if (directionInDegrees == 0) { return new Vector2((float)Math.Ceiling(position.X), position.Y); }
+            //if (directionInDegrees == 180) { return new Vector2((float)Math.Floor(position.X), position.Y); }
+            CollisionInfo collisionInfo = new CollisionInfo();
+
+            //TODO: fix horizontal looking
+            if (directionInDegrees == 0) { return null; }
+            if (directionInDegrees == 180) { return null; }
             if (directionInDegrees == 90 || directionInDegrees == 270) { return null; }
 
             int firstXCoordinateToCheck = 0;
@@ -91,19 +96,28 @@ namespace Raycasting
                 if (!y.HasValue || !map.Contains(realX, (int)y.Value)) { return null; }
                 if (map[realX, (int)y.Value] != 0)
                 {
-                    return new Vector2(x,y.Value);
+                    collisionInfo.CollisionPoint = new Vector2(x, y.Value);
+                    collisionInfo.PositionOnWall = y.Value - (int)y.Value;
+                    collisionInfo.TileHit = new Point(realX, (int)y.Value);
+                    return collisionInfo;
                 }
                 if(x == lastXCoordinateToCheck) { done = true; }
             }
             return null;
         }
 
-        public static Vector2? GetHorizontalCollision(this int[,] map, Vector2 position, float directionInDegrees, float maxDistance)
+        public static CollisionInfo? GetHorizontalCollision(this int[,] map, Vector2 position, float directionInDegrees, float maxDistance)
         {
+            CollisionInfo collisionInfo = new CollisionInfo();
             int firstYCoordinateToCheck = 0;
             int lastYCoordinateToCheck = 0;
-            if (directionInDegrees== 90) { return new Vector2(position.X, (float)Math.Floor(position.Y)); }
-            if (directionInDegrees == 270) { return new Vector2(position.X, (float)Math.Ceiling(position.Y)); }
+            //if (directionInDegrees== 90) { return new Vector2(position.X, (float)Math.Floor(position.Y)); }
+            //if (directionInDegrees == 270) { return new Vector2(position.X, (float)Math.Ceiling(position.Y)); }
+            
+            
+            //TODO: take care of vertical looking, as this gives a line without slope
+            if (directionInDegrees == 90) { return null; }
+            if (directionInDegrees == 270) { return null; }
             if (directionInDegrees == 0 || directionInDegrees == 180) { return null; }
 
             float directionInRadian = (float) MathHelper.ToRadians(directionInDegrees);
@@ -132,7 +146,10 @@ namespace Raycasting
                 if (!x.HasValue || !map.Contains((int)x.Value,realY)) { return null; }
                 if (map[(int)x.Value, realY] != 0)
                 {
-                    return new Vector2(x.Value, y);
+                    collisionInfo.CollisionPoint = new Vector2(x.Value, y);
+                    collisionInfo.PositionOnWall = x.Value - (int)x.Value;
+                    collisionInfo.TileHit = new Point((int)x.Value, realY);
+                    return collisionInfo;
                 }
                 if (y == lastYCoordinateToCheck) { done = true; }
             }

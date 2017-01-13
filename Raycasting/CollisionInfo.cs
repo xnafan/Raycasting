@@ -9,8 +9,8 @@ namespace Raycasting
 {
     public struct CollisionInfo
     {
-        public Vector2? CollisionPoint { get; set; }
-        public Point? TileHit { get; set; }
-        public float? PositionOnWall { get; set; }
+        public Vector2 CollisionPoint { get; set; }
+        public Point TileHit { get; set; }
+        public float PositionOnWall { get; set; }
     }
 }

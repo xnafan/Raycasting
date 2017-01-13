@@ -37,7 +37,7 @@ namespace Raycasting
             Content.RootDirectory = "Content";
             _halfWidthOfViewingField = _widthOfViewingField / 2;
             _raysPerDegreeOrResolutionIfYoudRatherCallItThat = _widthOfViewingField / _viewingAngle;
-            //_graphics.IsFullScreen = true;
+            _graphics.IsFullScreen = true;
         }
 
         protected override void LoadContent()
@@ -105,26 +105,24 @@ namespace Raycasting
                 var fisheyeCompensation = Math.Cos(MathHelper.ToRadians(realAngle));
                 var absoluteAngle = _player.ViewingAngle + realAngle;
 
-                float sourceBitmapPositionToGrabFrom = 0;
                // var collisionPosition = _maze.GetCollisionPoint(_player.Position, MathHelper.ToRadians(absoluteAngle));
                var collisionPosition = _maze.GetCollisionPointImproved(_player.Position,  absoluteAngle, 100);
                 //Console.WriteLine("ray-angle: " + realAngle + ", collision: " + collisionPosition);
                 float distanceToCollision = 1000;
                 if (collisionPosition.HasValue)
                 {
-                    distanceToCollision = Vector2.Distance(_player.Position, collisionPosition.Value);
-                    sourceBitmapPositionToGrabFrom = collisionPosition.Value.GetPositionOnWall();
+                    distanceToCollision = Vector2.Distance(_player.Position, collisionPosition.Value.CollisionPoint);
                 }
                 else continue;
 
-                int textureIndex = _maze[(int)collisionPosition.Value.X, (int)collisionPosition.Value.Y] - 1;
+                int textureIndex = _maze[collisionPosition.Value.TileHit.X, collisionPosition.Value.TileHit.Y] - 1;
                 textureIndex %= _textures[_textureSetIndex].Length;
                 var destinationHeight = _heightOfViewingField / distanceToCollision / fisheyeCompensation;
 
                 //TODO: remove texturehack when math is okay
                 if (textureIndex < 0) textureIndex = 0;
 
-                var sourceRectangle = new Rectangle((int)(sourceBitmapPositionToGrabFrom * _textures[_textureSetIndex][textureIndex].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, _textures[_textureSetIndex][textureIndex].Height);
+                var sourceRectangle = new Rectangle((int)(collisionPosition.Value.PositionOnWall * _textures[_textureSetIndex][textureIndex].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, _textures[_textureSetIndex][textureIndex].Height);
                 
                 float percentageOfWidth = deltaAngle / _viewingAngle;
                 var destinationRectangle = new Rectangle((int)( _widthOfViewingField * percentageOfWidth), (int)((_heightOfViewingField - destinationHeight) / 2),
