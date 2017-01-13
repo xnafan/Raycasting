@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Audio;
 using System.IO;
 using System.Collections.Generic;
+using System.Configuration;
 
 namespace Raycasting
 {
@@ -14,7 +15,8 @@ namespace Raycasting
         GraphicsDeviceManager _graphics;
         SpriteBatch _spriteBatch;
         int[,] _maze = new int[15, 15];
-        Texture2D[] _textures;
+        Texture2D[][] _textures;
+        int _textureSetIndex = 0;
         Player _player;
         int _widthOfViewingField = 1200;
         int _halfWidthOfViewingField;
@@ -25,6 +27,7 @@ namespace Raycasting
         int _pixelsPerDegreeOfViewingAngleFromViewArea;
         SpriteFont _font;
         Random _rnd = new Random();
+        KeyboardState _oldKeyboardState;
 
         public Game1()
         {
@@ -40,8 +43,9 @@ namespace Raycasting
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _textures = GetImages();
-            
+            _textures = new ImageGetterFromZipFiles().GetTextures(GraphicsDevice);
+
+            int maxLength = _textures.Max(item => item.Count());
             
             for (int x = 0; x <= _maze.GetUpperBound(0); x++)
             {
@@ -49,18 +53,17 @@ namespace Raycasting
                 {
                     if (y == 0 || x == 0 || y == _maze.GetUpperBound(1) || x == _maze.GetUpperBound(0))
                     {
-                        _maze[x, y] = 1+_rnd.Next(_textures.Length);
+                        _maze[x, y] = 1+_rnd.Next(maxLength);
                     }
                 }
             }
             for (int i = 0; i < 50; i++)
             {
-                _maze[_rnd.Next(_maze.GetUpperBound(0)+1), _rnd.Next(_maze.GetUpperBound(1)+1)] = 1 + _rnd.Next(_textures.Length);
+                _maze[_rnd.Next(_maze.GetUpperBound(0)+1), _rnd.Next(_maze.GetUpperBound(1)+1)] = 1 + _rnd.Next(maxLength);
             }
 
-            _maze[1, 1] = 2;
             _player = new Player(_maze);
-            _pixelsPerDegreeOfViewingAngleFromSourceBitmap = _textures[0].Width / _viewingAngle;
+            _pixelsPerDegreeOfViewingAngleFromSourceBitmap = _textures[0][0].Width / _viewingAngle;
             _pixelsPerDegreeOfViewingAngleFromViewArea = _widthOfViewingField / (_viewingAngle*_raysPerDegreeOrResolutionIfYoudRatherCallItThat);
             _player.Position = new Vector2(4.5f, 4.5f);
             _maze[(int)_player.Position.X, (int)_player.Position.Y] = 0;
@@ -68,22 +71,7 @@ namespace Raycasting
             _font = Content.Load<SpriteFont>("DefaultFont");
             Sounds.Instance.Bump = Content.Load<SoundEffect>("Bump");
         }
-
-        private Texture2D[] GetImages()
-        {
-            List<Texture2D> textures = new List<Texture2D>();
-            var files = Directory.GetFiles(@"D:\Dropbox\Programming\XNA\Raycasting\Raycasting\Images");
-            foreach (var item in files)
-            {
-                
-                using (FileStream fileStream = new FileStream(item, FileMode.Open))
-                {
-                   textures.Add(Texture2D.FromStream(GraphicsDevice, fileStream));
-                }
-            }
-            return textures.ToArray();
-        }
-
+        
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
@@ -93,7 +81,8 @@ namespace Raycasting
             if (kbd.IsKeyDown(Keys.Down)) { _player.MoveBackwards(); }
             if (kbd.IsKeyDown(Keys.Left)) { _player.TurnLeft(); }
             if (kbd.IsKeyDown(Keys.Right)) { _player.TurnRight(); }
-
+            if (kbd.IsKeyDown(Keys.NumLock) && _oldKeyboardState.IsKeyUp(Keys.NumLock)) { _textureSetIndex++; _textureSetIndex %= _textures.Length; }
+            _oldKeyboardState = kbd;
         }
 
         protected override void Draw(GameTime gameTime)
@@ -104,6 +93,7 @@ namespace Raycasting
             _spriteBatch.Begin();
             base.Draw(gameTime);
             //_spriteBatch.Draw(_wallImage, Vector2.One * 64,  Color.White);
+            float degreePerPixel = _viewingAngle /_widthOfViewingField;
             for (float deltaAngle = 0; deltaAngle < _viewingAngle; deltaAngle += 1/(float)_raysPerDegreeOrResolutionIfYoudRatherCallItThat)
             {
                 var realAngle = deltaAngle - _viewingAngle / 2;
@@ -111,23 +101,30 @@ namespace Raycasting
                 var absoluteAngle = _player.ViewingAngle + realAngle;
 
                 float sourceBitmapPositionToGrabFrom = 0;
-                var collisionPosition = _maze.GetCollisionPoint(_player.Position, MathHelper.ToRadians(absoluteAngle));
+                //var collisionPosition = _maze.GetCollisionPoint(_player.Position, MathHelper.ToRadians(absoluteAngle));
+                var collisionPosition = _maze.GetCollisionPointImproved(_player,100);
+
                 float distanceToCollision = 1000;
                 if (collisionPosition.HasValue)
                 {
                     distanceToCollision = Vector2.Distance(_player.Position, collisionPosition.Value);
                     sourceBitmapPositionToGrabFrom = collisionPosition.Value.GetPositionOnWall();
                 }
+                else continue;
 
-                var textureIndex = _maze[(int)collisionPosition.Value.X, (int)collisionPosition.Value.Y] - 1;
+                int textureIndex = _maze[(int)collisionPosition.Value.X, (int)collisionPosition.Value.Y] - 1;
+                textureIndex %= _textures[_textureSetIndex].Length;
                 var destinationHeight = _heightOfViewingField / distanceToCollision / fisheyeCompensation;
 
-                var sourceRectangle = new Rectangle((int)(sourceBitmapPositionToGrabFrom * _textures[textureIndex].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, _textures[textureIndex].Height);
+                //TODO: remove texturehack when math is okay
+                if (textureIndex < 0) textureIndex = 0;
+
+                var sourceRectangle = new Rectangle((int)(sourceBitmapPositionToGrabFrom * _textures[_textureSetIndex][textureIndex].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, _textures[_textureSetIndex][textureIndex].Height);
 
                 float percentageOfWidth = deltaAngle / _viewingAngle;
                 var destinationRectangle = new Rectangle((int)( _widthOfViewingField * percentageOfWidth), (int)((_heightOfViewingField - destinationHeight) / 2), _pixelsPerDegreeOfViewingAngleFromViewArea , (int)destinationHeight);
                 
-                _spriteBatch.Draw(_textures[textureIndex], destinationRectangle, sourceRectangle, Color.White);
+                _spriteBatch.Draw(_textures[_textureSetIndex][textureIndex], destinationRectangle, sourceRectangle, Color.White);
             }
 
             _spriteBatch.DrawString(_font, _player.ToString(), Vector2.Zero, Color.White);
@@ -135,126 +132,6 @@ namespace Raycasting
         }
     }
 
-    public class Player
-    {
-        public Vector2 Position { get; set; }
-        public float ViewingAngle { get; set; }
-        public int[,] Map { get; set; }
-
-        public Player(int[,] map)
-        {
-            Map = map;
-        }
-
-        internal void MoveBackwards()
-        {
-            var tempStep = ((float)MathHelper.ToRadians(this.ViewingAngle)).GetAngleAsVector() * .07f;
-            var newPosition = this.Position - tempStep;
-            PerformMoveIfNotBlocked(newPosition);
-        }
-
-        private void PerformMoveIfNotBlocked(Vector2 newPosition)
-        {
-
-            if (!Map.IsBlocked(newPosition))
-            {
-                this.Position = newPosition;
-            }
-            else
-            {
-                var positionHorizontal = new Vector2(newPosition.X, this.Position.Y);
-                if (!Map.IsBlocked(positionHorizontal))
-                {
-                    this.Position = positionHorizontal;
-                }
-                else
-                {
-                    var positionVertical = new Vector2(this.Position.X, newPosition.Y);
-                    if (!Map.IsBlocked(positionVertical))
-                    {
-                        this.Position = positionVertical;
-                    }
-                }
-                Sounds.Instance.Bump.Play();
-            }
-        }
-
-        internal void MoveForward()
-        {
-            var tempStep = ((float)MathHelper.ToRadians(this.ViewingAngle)).GetAngleAsVector() * .07f;
-            var newPosition = this.Position + tempStep;
-            PerformMoveIfNotBlocked(newPosition);
-        }
-
-        public override string ToString()
-        {
-            return "Pos: " + this.Position + ", viewangle: " + this.ViewingAngle;
-        }
-
-        internal void TurnRight()
-        {
-            this.ViewingAngle += 3f;
-        }
-
-        internal void TurnLeft()
-        {
-            this.ViewingAngle -= 3f;
-        }
-    }
-
-    public static class MapHelper
-    {
-        public static float GetDistanceToObstacle(this int[,] map, Vector2 position, float angleInRadians)
-        {
-            var collisionPosition = GetCollisionPoint(map, position, angleInRadians);
-            if (collisionPosition.HasValue)
-            {
-                return Vector2.Distance(position, collisionPosition.Value);
-            }
-            else
-            { return 1000; }
-        }
-
-        public static Vector2? GetCollisionPoint(this int[,] map, Vector2 position, float angleInRadians)
-        {
-            float stepSize = 0.01f;
-            float maxDistance = 20;
-            Vector2 directionOfRay = GetAngleAsVector(angleInRadians);
-            for (float distance = stepSize; distance < maxDistance; distance += stepSize)
-            {
-                Vector2 positionToTest = position + directionOfRay * distance;
-                if (map[(int)positionToTest.X, (int)positionToTest.Y] != 0)
-                    return positionToTest;
-            }
-            return null;
-        }
-
-        public static Vector2 GetAngleAsVector(this float angle)
-        {
-            var newDirection = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-            newDirection.Normalize();
-            return newDirection;
-        }
-        public static bool IsBlocked(this int[,] map, Vector2 position)
-        {
-            return map[(int)position.X, (int)position.Y] != 0;
-        }
-
-        public static float GetPositionOnWall(this Vector2 position)
-        {
-            float xResulting = 0;
-            var xFraction = (position.X - (int)position.X);
-            if (xFraction > .5f) { xResulting = Math.Abs(1 - xFraction); }
-            else { xResulting = xFraction; }
-
-            float yResulting = 0;
-            var yFraction = (position.Y - (int)position.Y);
-            if (yFraction > .5f) { yResulting = Math.Abs(1 - yFraction); }
-            else { yResulting = yFraction; }
-
-            if (xResulting > yResulting) { return xFraction; }
-            else { return yFraction; }
-        }
-    }
+  
 }
 
