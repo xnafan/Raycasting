@@ -10,15 +10,18 @@ namespace Raycasting
 {
     public class Game1 : Game
     {
+
+        #region Variables
         GraphicsDeviceManager _graphics;
+        bool _showHelp;
         SpriteBatch _spriteBatch;
         int[,] _maze = new int[31, 31];
-        List<Action<CollisionInfo?, Rectangle>> _renderMethods = new List<Action<CollisionInfo?, Rectangle>>() ;
+        List<Action<CollisionInfo?, Rectangle>> _renderSliceMethods = new List<Action<CollisionInfo?, Rectangle>>();
         int _renderMethodIndex;
         Texture2D[][] _textures;
         int _textureSetIndex = 0;
         Player _player;
-        float _msForNextSlide, _msBetweenSlides = 3000;
+        float _msForNextSlide, _msBetweenSlides = 5000;
         int _slideIndex = 0;
         int _widthOfViewingField = 1200;
         int _halfWidthOfViewingField;
@@ -33,7 +36,9 @@ namespace Raycasting
         bool _useOldCollisionFinder = false;
         RenderTarget2D _target;
         private bool _psychedelicMode;
+        #endregion
 
+        #region Constructor and related
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -42,10 +47,9 @@ namespace Raycasting
             Content.RootDirectory = "Content";
             _halfWidthOfViewingField = _widthOfViewingField / 2;
             _raysPerDegreeOrResolutionIfYoudRatherCallItThat = _widthOfViewingField / _viewingAngle;
-            _renderMethods.Add(Render);
-            _renderMethods.Add(RenderSlideShow);
-
-            _graphics.IsFullScreen = false;
+            _renderSliceMethods.Add(RenderSliceForSlideShow);
+            _renderSliceMethods.Add(RenderSlice);
+            _graphics.IsFullScreen = true;
         }
 
         protected override void LoadContent()
@@ -57,7 +61,7 @@ namespace Raycasting
 
             _player = new Player(_maze);
             _pixelsPerDegreeOfViewingAngleFromSourceBitmap = _textures[0][0].Width / _viewingAngle;
-            _pixelsPerDegreeOfViewingAngleFromViewArea = _widthOfViewingField / (_viewingAngle*_raysPerDegreeOrResolutionIfYoudRatherCallItThat);
+            _pixelsPerDegreeOfViewingAngleFromViewArea = _widthOfViewingField / (_viewingAngle * _raysPerDegreeOrResolutionIfYoudRatherCallItThat);
             _player.Position = new Vector2(2.5f, 3.5f);
             _maze[(int)_player.Position.X, (int)_player.Position.Y] = 0;
             _player.ViewingAngle = 0;
@@ -87,7 +91,8 @@ namespace Raycasting
             {
                 _maze[_rnd.Next(_maze.GetUpperBound(0) + 1), _rnd.Next(_maze.GetUpperBound(1) + 1)] = 1 + _rnd.Next(maxLength);
             }
-        }
+        } 
+        #endregion
 
         protected override void Update(GameTime gameTime)
         {
@@ -99,9 +104,7 @@ namespace Raycasting
             if (kbd.IsKeyDown(Keys.Left)) { _player.TurnLeft(); }
             if (kbd.IsKeyDown(Keys.Right)) { _player.TurnRight(); }
             if (kbd.IsKeyDown(Keys.NumLock) && _oldKeyboardState.IsKeyUp(Keys.NumLock)) { _textureSetIndex++; _textureSetIndex %= _textures.Length; }
-            if (kbd.IsKeyDown(Keys.F11) && _oldKeyboardState.IsKeyUp(Keys.F11)) {
-                _graphics.ToggleFullScreen();
-            }
+          
             if (kbd.IsKeyDown(Keys.P) && _oldKeyboardState.IsKeyUp(Keys.P))
             {
                 _psychedelicMode = !_psychedelicMode;
@@ -109,9 +112,15 @@ namespace Raycasting
             if (kbd.IsKeyDown(Keys.F10) && _oldKeyboardState.IsKeyUp(Keys.F10))
             {
                 _renderMethodIndex++;
-                _renderMethodIndex %= _renderMethods.Count;
+                _renderMethodIndex %= _renderSliceMethods.Count;
             }
             if (kbd.IsKeyDown(Keys.F1) && _oldKeyboardState.IsKeyUp(Keys.F1))
+            { _showHelp = !_showHelp; }
+            if (kbd.IsKeyDown(Keys.F11) && _oldKeyboardState.IsKeyUp(Keys.F11))
+            {
+                _graphics.ToggleFullScreen();
+            }
+            if (kbd.IsKeyDown(Keys.F12) && _oldKeyboardState.IsKeyUp(Keys.F12))
             { _useOldCollisionFinder = !_useOldCollisionFinder; }
                 _oldKeyboardState = kbd;
             _msForNextSlide -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -121,21 +130,14 @@ namespace Raycasting
                 _msForNextSlide = _msBetweenSlides;
             }
         }
-
         protected override void Draw(GameTime gameTime)
-        {
-            if (_useOldCollisionFinder){ DrawUnOptimized(gameTime);  }
-            else{DrawOptimized(gameTime); }
-        }
-
-        protected void DrawOptimized(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
             Console.WriteLine(_player);
             if (_psychedelicMode)
-            { RenderAllToTarget(gameTime, _renderMethods[_renderMethodIndex]); }
+            { RenderAllToTarget(gameTime, _renderSliceMethods[_renderMethodIndex]); }
             else
-            {RenderAll(gameTime, _renderMethods[_renderMethodIndex]);}
+            {RenderAll(gameTime, _renderSliceMethods[_renderMethodIndex]);}
         }
 
         private void RenderAll(GameTime gameTime, Action<CollisionInfo?, Rectangle> renderMethod)
@@ -171,43 +173,43 @@ namespace Raycasting
 
                 renderMethod(collisionPosition, destinationRectangle);
             }
-
             DrawHelp();
             _spriteBatch.End();
         }
 
-        private void RenderAllToTarget(GameTime gameTime, Action<CollisionInfo?, Rectangle> renderMethod)
-        {
-            GraphicsDevice.SetRenderTarget(_target);
-            RenderAll(gameTime, _renderMethods[_renderMethodIndex]);
-            GraphicsDevice.SetRenderTarget(null);
-            _spriteBatch.Begin();
-            var halfScreen = new Vector2(_widthOfViewingField / 2, _heightOfViewingField / 2);
-            var scale = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds);
-            scale = 1.4f +Math.Abs(scale);
-            _spriteBatch.Draw(_target, halfScreen, null, Color.White, 0,halfScreen ,scale, SpriteEffects.None,0 );
-            _spriteBatch.End();
-            
-            RenderAll(gameTime, RenderFromTarget);
-        }
+    
 
         private void RenderAllToTargetTwice(GameTime gameTime, Action<CollisionInfo?, Rectangle> renderMethod)
         {
             GraphicsDevice.SetRenderTarget(_target);
-            RenderAllToTarget(gameTime, _renderMethods[_renderMethodIndex]);
+            RenderAllToTarget(gameTime, _renderSliceMethods[_renderMethodIndex]);
             GraphicsDevice.SetRenderTarget(null);
-            RenderAllToTarget(gameTime, RenderFromTarget);
-            RenderAll(gameTime, RenderFromTarget);
+            RenderAllToTarget(gameTime, RenderSliceFromTarget);
+            RenderAll(gameTime, RenderSliceFromTarget);
         }
 
+        private void RenderAllToTarget(GameTime gameTime, Action<CollisionInfo?, Rectangle> renderSliceMethod)
+        {
+            GraphicsDevice.SetRenderTarget(_target);
+            RenderAll(gameTime, _renderSliceMethods[_renderMethodIndex]);
+            GraphicsDevice.SetRenderTarget(null);
+            _spriteBatch.Begin();
+            var halfScreen = new Vector2(_widthOfViewingField / 2, _heightOfViewingField / 2);
+            var scale = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds);
+            scale = 1.4f + Math.Abs(scale);
+            _spriteBatch.Draw(_target, halfScreen, null, Color.White, 0, halfScreen, scale, SpriteEffects.None, 0);
+            _spriteBatch.End();
 
-        private void RenderFromTarget(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
+            RenderAll(gameTime, RenderSliceFromTarget);
+        }
+
+        private void RenderSliceFromTarget(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
         {
             var sourceRectangle1 = new Rectangle((int)(collisionPosition.Value.PositionOnWall * _widthOfViewingField), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, _heightOfViewingField);
             _spriteBatch.Draw(_target, destinationRectangle, sourceRectangle1, Color.White);
         }
 
-        private void Render(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
+        private void RenderSlice(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
         {
             int textureIndex1 = _maze[collisionPosition.Value.TileHit.X, collisionPosition.Value.TileHit.Y] - 1 ;
             textureIndex1 %= _textures[_textureSetIndex].Length;
@@ -217,9 +219,12 @@ namespace Raycasting
             _spriteBatch.Draw(_textures[_textureSetIndex][textureIndex1], destinationRectangle, sourceRectangle1, Color.White);
         }
 
-     
+        float BezierBlend(float t)
+        {
+            return (float)Math.Pow(t, 2) * (3.0f - 2.0f * t);
+        }
 
-        private void RenderSlideShow(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
+        private void RenderSliceForSlideShow(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
         {
             int textureIndex1 = _maze[collisionPosition.Value.TileHit.X, collisionPosition.Value.TileHit.Y] - 1 + _slideIndex;
             textureIndex1 %= _textures[_textureSetIndex].Length;
@@ -230,61 +235,23 @@ namespace Raycasting
             var sourceRectangle2 = new Rectangle((int)(collisionPosition.Value.PositionOnWall * _textures[_textureSetIndex][textureIndex2].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, _textures[_textureSetIndex][textureIndex2].Height);
 
             float transparency = _msForNextSlide / _msBetweenSlides;
+            transparency = BezierBlend(transparency);
             _spriteBatch.Draw(_textures[_textureSetIndex][textureIndex1], destinationRectangle, sourceRectangle1, Color.White);
             _spriteBatch.Draw(_textures[_textureSetIndex][textureIndex2], destinationRectangle, sourceRectangle2, Color.White * (1 - transparency));
         }
 
-
-        protected void DrawUnOptimized(GameTime gameTime)
-        {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            // TODO: Add your drawing code here
-            _spriteBatch.Begin();
-            base.Draw(gameTime);
-            //_spriteBatch.Draw(_wallImage, Vector2.One * 64,  Color.White);
-            float degreePerPixel = _viewingAngle / _widthOfViewingField;
-            for (float deltaAngle = 0; deltaAngle < _viewingAngle; deltaAngle += 1 / (float)_raysPerDegreeOrResolutionIfYoudRatherCallItThat)
-            {
-                var realAngle = deltaAngle - _viewingAngle / 2;
-                var fisheyeCompensation = Math.Cos(MathHelper.ToRadians(realAngle));
-                var absoluteAngle = _player.ViewingAngle + realAngle;
-
-                float sourceBitmapPositionToGrabFrom = 0;
-                var collisionPosition = _maze.GetCollisionPoint(_player.Position, MathHelper.ToRadians(absoluteAngle));
-
-                float distanceToCollision = 1000;
-                if (collisionPosition.HasValue)
-                {
-                    distanceToCollision = Vector2.Distance(_player.Position, collisionPosition.Value);
-                    sourceBitmapPositionToGrabFrom = collisionPosition.Value.GetPositionOnWall();
-                }
-                else continue;
-
-                int textureIndex = _maze[(int)collisionPosition.Value.X, (int)collisionPosition.Value.Y] - 1;
-                textureIndex %= _textures[_textureSetIndex].Length;
-                var destinationHeight = _heightOfViewingField / distanceToCollision / fisheyeCompensation;
-
-                //TODO: remove texturehack when math is okay
-                if (textureIndex < 0) textureIndex = 0;
-
-                var sourceRectangle = new Rectangle((int)(sourceBitmapPositionToGrabFrom * _textures[_textureSetIndex][textureIndex].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, _textures[_textureSetIndex][textureIndex].Height);
-
-                float percentageOfWidth = deltaAngle / _viewingAngle;
-                var destinationRectangle = new Rectangle((int)(_widthOfViewingField * percentageOfWidth), (int)((_heightOfViewingField - destinationHeight) / 2), _pixelsPerDegreeOfViewingAngleFromViewArea, (int)destinationHeight);
-
-                _spriteBatch.Draw(_textures[_textureSetIndex][textureIndex], destinationRectangle, sourceRectangle, Color.White);
-            }
-
-            DrawHelp();
-            
-            _spriteBatch.End();
-        }
         private void DrawHelp()
         {
             _spriteBatch.DrawString(_font, _player.ToString(), Vector2.Zero, Color.White);
             Vector2 top = Vector2.UnitY * (_heightOfViewingField - 80);
             Vector2 interval = Vector2.UnitY * 20;
+
+            if (!_showHelp) {
+                top.Y = _heightOfViewingField - 20;
+                _spriteBatch.DrawString(_font, "[F1] for Help", top, Color.White);
+                return;
+            }
+
             _spriteBatch.DrawString(_font, "[F10] to cycle presentationmodes", top, Color.White);
             top += interval;
             Color optimizationColor = _useOldCollisionFinder ? Color.Red : Color.Green;

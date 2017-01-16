@@ -15,17 +15,6 @@ namespace Raycasting
             return (float)Math.Atan2(angleVector.X, -angleVector.Y);
         }
 
-        //public static float GetDistanceToObstacle(this int[,] map, Vector2 position, float angleInRadians)
-        //{
-        //    var collisionPosition = GetCollisionPoint(map, position, angleInRadians);
-        //    if (collisionPosition.HasValue)
-        //    {
-        //        return Vector2.Distance(position, collisionPosition.Value);
-        //    }
-        //    else
-        //    { return 1000; }
-        //}
-
         public static Vector2? GetCollisionPoint(this int[,] map, Vector2 position, float angleInRadians)
         {
             float stepSize = 0.001f;
