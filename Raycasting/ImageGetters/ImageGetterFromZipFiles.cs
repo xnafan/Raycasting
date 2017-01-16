@@ -43,7 +43,8 @@ namespace Raycasting
                 {
                     var runningFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     imageFolder = ConfigurationManager.AppSettings[AppSettingsKey] ?? runningFolder;
-                    zipFilesToOpen = Directory.EnumerateFiles(imageFolder, "*.zip").ToList();
+                    if (Directory.Exists(imageFolder))
+                    { zipFilesToOpen = Directory.EnumerateFiles(imageFolder, "*.zip").ToList(); }
                 }
                 var tempTextures = new List<Texture2D[]>();
 

@@ -20,6 +20,7 @@ namespace Raycasting
 
         public void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop)
         {
+            List<string> imageFolders = new List<string>();
             try
             {
                 if (string.IsNullOrWhiteSpace(_rootImageFolder))
@@ -27,9 +28,12 @@ namespace Raycasting
                     var _runningFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     _rootImageFolder = ConfigurationManager.AppSettings[AppSettingsKey] ?? _runningFolder;
                 }
+                if (Directory.Exists(_rootImageFolder))
+                {
+                    imageFolders = Directory.GetDirectories(_rootImageFolder).ToList();
+                    imageFolders.Add(_rootImageFolder);
+                }
 
-                var imageFolders = Directory.GetDirectories(_rootImageFolder).ToList();
-                imageFolders.Add(_rootImageFolder);
                 var tempTextures = new List<Texture2D[]>();
                 for (int i = 0; i < imageFolders.Count; i++)
                 {

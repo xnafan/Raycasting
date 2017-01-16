@@ -104,15 +104,15 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="Images\Clean.zip">
+    <None Include="Images\Clean.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\Bricks.zip">
+    </None>
+    <None Include="Images\Bricks.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\Bricks - Copy.zip">
+    </None>
+    <None Include="Images\Bricks - Copy.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </None>
     <None Include="Raycasting_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
