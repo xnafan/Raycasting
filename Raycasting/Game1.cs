@@ -283,10 +283,18 @@ namespace Raycasting
         private void DrawHelp()
         {
             _spriteBatch.DrawString(_font, _player.ToString(), Vector2.Zero, Color.White);
+            Vector2 top = Vector2.UnitY * (_heightOfViewingField - 80);
+            Vector2 interval = Vector2.UnitY * 20;
+            _spriteBatch.DrawString(_font, "[F10] to cycle presentationmodes", top, Color.White);
+            top += interval;
             Color optimizationColor = _useOldCollisionFinder ? Color.Red : Color.Green;
-            _spriteBatch.DrawString(_font, "[F1] to toggle drawoptimization. Currently: * " + (_useOldCollisionFinder ? "UN" : "") + "OPTIMIZED *", Vector2.UnitY * (_heightOfViewingField - 90), optimizationColor);
-            _spriteBatch.DrawString(_font, "[F11] to toggle fullscreen", Vector2.UnitY * (_heightOfViewingField - 60), Color.White);
-            _spriteBatch.DrawString(_font, "[NUMLOCK] to switch textures", Vector2.UnitY * (_heightOfViewingField - 30), Color.White);
+            _spriteBatch.DrawString(_font, "[F1] to toggle drawoptimization. Currently: * " + (_useOldCollisionFinder ? "UN" : "") + "OPTIMIZED *", top, optimizationColor);
+            top += interval;
+            _spriteBatch.DrawString(_font, "[F11] to toggle fullscreen", top, Color.White);
+            top += interval;
+            _spriteBatch.DrawString(_font, "[NUMLOCK] to switch textures", top, Color.White);
+            top += interval;
+            _spriteBatch.DrawString(_font, "[P] to toggle psychedelic mode", top, Color.White);
         }
     }
 
