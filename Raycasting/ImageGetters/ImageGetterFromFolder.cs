@@ -11,14 +11,25 @@ namespace Raycasting
     {
 
         public const string AppSettingsKey = "ImageFolderPath";
+        private string _rootImageFolder;
+
+        public ImageGetterFromFolder(string rootImageFolder = null)
+        {
+            _rootImageFolder = rootImageFolder;
+        }
+
         public void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop)
         {
             try
             {
-                var runningFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                var rootImageFolder = ConfigurationManager.AppSettings[AppSettingsKey] ?? runningFolder;
-                var imageFolders = Directory.GetDirectories(rootImageFolder).ToList();
-                imageFolders.Add(rootImageFolder);
+                if (string.IsNullOrWhiteSpace(_rootImageFolder))
+                {
+                    var _runningFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    _rootImageFolder = ConfigurationManager.AppSettings[AppSettingsKey] ?? _runningFolder;
+                }
+
+                var imageFolders = Directory.GetDirectories(_rootImageFolder).ToList();
+                imageFolders.Add(_rootImageFolder);
                 var tempTextures = new List<Texture2D[]>();
                 for (int i = 0; i < imageFolders.Count; i++)
                 {
@@ -36,9 +47,7 @@ namespace Raycasting
                     { textureSetListToAddTo.Add(textures.ToArray()); }
                 }
             }
-            catch 
-            {
-            }
+            catch { throw;}
         }
     }
 }
