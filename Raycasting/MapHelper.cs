@@ -51,13 +51,8 @@ namespace Raycasting
 
         public static CollisionInfo? GetVerticalCollision(this int[,] map, Vector2 position, float directionInDegrees, float maxDistance)
         {
-            //if (directionInDegrees == 0) { return new Vector2((float)Math.Ceiling(position.X), position.Y); }
-            //if (directionInDegrees == 180) { return new Vector2((float)Math.Floor(position.X), position.Y); }
             CollisionInfo collisionInfo = new CollisionInfo();
-
-            //TODO: fix horizontal looking
-            if (directionInDegrees == 0) { return null; }
-            if (directionInDegrees == 180) { return null; }
+    
             if (directionInDegrees == 90 || directionInDegrees == 270) { return null; }
 
             int firstXCoordinateToCheck = 0;
@@ -80,7 +75,16 @@ namespace Raycasting
             bool done = false;
             for (int x = firstXCoordinateToCheck; !done; x += deltaX)
             {
-                var y = line.GetInterSectWithVerticalLine(x);
+                float? y = 0;
+                if (directionInDegrees == 0 || directionInDegrees == 180)
+                {
+                    y = position.Y;
+                }
+                else
+                {
+                    y = line.GetInterSectWithVerticalLine(x);
+                }
+                
                 var realX = x - (deltaX < 0 ? 1 : 0);
                 if (!y.HasValue || !map.Contains(realX, (int)y.Value)) { return null; }
                 if (map[realX, (int)y.Value] != 0)
@@ -100,15 +104,8 @@ namespace Raycasting
             CollisionInfo collisionInfo = new CollisionInfo();
             int firstYCoordinateToCheck = 0;
             int lastYCoordinateToCheck = 0;
-            //if (directionInDegrees== 90) { return new Vector2(position.X, (float)Math.Floor(position.Y)); }
-            //if (directionInDegrees == 270) { return new Vector2(position.X, (float)Math.Ceiling(position.Y)); }
             
-            
-            //TODO: take care of vertical looking, as this gives a line without slope
-            if (directionInDegrees == 90) { return null; }
-            if (directionInDegrees == 270) { return null; }
             if (directionInDegrees == 0 || directionInDegrees == 180) { return null; }
-
             float directionInRadian = (float) MathHelper.ToRadians(directionInDegrees);
 
             Vector2 directionAsVector = new Vector2((float)Math.Cos(directionInRadian), (float)Math.Sin(directionInRadian));
@@ -130,7 +127,13 @@ namespace Raycasting
             bool done = false;
             for (int y = firstYCoordinateToCheck; !done; y += deltaY)
             {
-                var x = line.GetInterSectWithHorizontalLine(y);
+                float? x = 0;
+                if (directionInDegrees == 90 || directionInDegrees == 270)
+                {
+                    x = position.X;
+                }
+                else
+                { x = line.GetInterSectWithHorizontalLine(y); }
                 var realY = y - (deltaY < 0 ? 1 : 0);
                 if (!x.HasValue || !map.Contains((int)x.Value,realY)) { return null; }
                 if (map[(int)x.Value, realY] != 0)
