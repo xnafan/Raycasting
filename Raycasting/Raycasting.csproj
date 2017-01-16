@@ -73,9 +73,9 @@
   <ItemGroup>
     <Compile Include="CollisionInfo.cs" />
     <Compile Include="Game1.cs" />
-    <Compile Include="ITextureGetter.cs" />
-    <Compile Include="ImageGetterFromZipFiles.cs" />
-    <Compile Include="ImageGetterFromAppSettings.cs" />
+    <Compile Include="ImageGetters\ITextureGetter.cs" />
+    <Compile Include="ImageGetters\ImageGetterFromZipFiles.cs" />
+    <Compile Include="ImageGetters\ImageGetterFromFolder.cs" />
     <Compile Include="LineFormula.cs" />
     <Compile Include="MapHelper.cs" />
     <Compile Include="Player.cs" />
@@ -95,9 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Icon.ico" />
-    <Content Include="Images.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="ToDo.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -107,24 +104,15 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="Clean.zip">
+    <Content Include="Images\Clean.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Bricks.zip">
+    <Content Include="Images\Bricks.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Bricks - Copy.zip">
+    <Content Include="Images\Bricks - Copy.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Images_zip\original\bricks.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Images_zip\original\Clean.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Images_zip\original\Images.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="Raycasting_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>

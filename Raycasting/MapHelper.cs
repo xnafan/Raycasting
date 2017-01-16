@@ -51,8 +51,6 @@ namespace Raycasting
 
         public static CollisionInfo? GetVerticalCollision(this int[,] map, Vector2 position, float directionInDegrees, float maxDistance)
         {
-            CollisionInfo collisionInfo = new CollisionInfo();
-    
             if (directionInDegrees == 90 || directionInDegrees == 270) { return null; }
 
             int firstXCoordinateToCheck = 0;
@@ -76,23 +74,19 @@ namespace Raycasting
             for (int x = firstXCoordinateToCheck; !done; x += deltaX)
             {
                 float? y = 0;
-                if (directionInDegrees == 0 || directionInDegrees == 180)
-                {
-                    y = position.Y;
-                }
-                else
-                {
-                    y = line.GetInterSectWithVerticalLine(x);
-                }
+                if (directionInDegrees == 0 || directionInDegrees == 180){y = position.Y;}
+                else{y = line.GetInterSectWithVerticalLine(x);}
                 
                 var realX = x - (deltaX < 0 ? 1 : 0);
                 if (!y.HasValue || !map.Contains(realX, (int)y.Value)) { return null; }
                 if (map[realX, (int)y.Value] != 0)
                 {
-                    collisionInfo.CollisionPoint = new Vector2(x, y.Value);
-                    collisionInfo.PositionOnWall = y.Value - (int)y.Value;
-                    collisionInfo.TileHit = new Point(realX, (int)y.Value);
-                    return collisionInfo;
+                    return new CollisionInfo()
+                    {
+                    CollisionPoint = new Vector2(x, y.Value),
+                    PositionOnWall = y.Value - (int)y.Value,
+                    TileHit = new Point(realX, (int)y.Value),
+                };
                 }
                 if(x == lastXCoordinateToCheck) { done = true; }
             }
@@ -101,7 +95,7 @@ namespace Raycasting
 
         public static CollisionInfo? GetHorizontalCollision(this int[,] map, Vector2 position, float directionInDegrees, float maxDistance)
         {
-            CollisionInfo collisionInfo = new CollisionInfo();
+            
             int firstYCoordinateToCheck = 0;
             int lastYCoordinateToCheck = 0;
             
@@ -109,7 +103,6 @@ namespace Raycasting
             float directionInRadian = (float) MathHelper.ToRadians(directionInDegrees);
 
             Vector2 directionAsVector = new Vector2((float)Math.Cos(directionInRadian), (float)Math.Sin(directionInRadian));
-          
 
             if (directionAsVector.Y < 0)
             {
@@ -128,20 +121,19 @@ namespace Raycasting
             for (int y = firstYCoordinateToCheck; !done; y += deltaY)
             {
                 float? x = 0;
-                if (directionInDegrees == 90 || directionInDegrees == 270)
-                {
-                    x = position.X;
-                }
-                else
-                { x = line.GetInterSectWithHorizontalLine(y); }
+                if (directionInDegrees == 90 || directionInDegrees == 270){x = position.X;}
+                else{ x = line.GetInterSectWithHorizontalLine(y); }
                 var realY = y - (deltaY < 0 ? 1 : 0);
                 if (!x.HasValue || !map.Contains((int)x.Value,realY)) { return null; }
                 if (map[(int)x.Value, realY] != 0)
                 {
-                    collisionInfo.CollisionPoint = new Vector2(x.Value, y);
-                    collisionInfo.PositionOnWall = x.Value - (int)x.Value;
-                    collisionInfo.TileHit = new Point((int)x.Value, realY);
-                    return collisionInfo;
+                    return new CollisionInfo()
+                    {
+                        CollisionPoint = new Vector2(x.Value, y),
+                        PositionOnWall = x.Value - (int)x.Value,
+                        TileHit = new Point((int)x.Value, realY)
+
+                    };
                 }
                 if (y == lastYCoordinateToCheck) { done = true; }
             }
