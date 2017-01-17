@@ -14,6 +14,8 @@ namespace Raycasting
     public class Game1 : Game
     {
 
+        public static SpriteBatch SpriteBatch;
+
         #region Variables
         GraphicsDeviceManager _graphics;
         bool _showHelp;
@@ -39,6 +41,7 @@ namespace Raycasting
         Vector2 _screen, _halfScreen;
         Texture2D _white;
         private bool _exiting;
+        List<TextureSprite> _sprites = new List<TextureSprite>();
         #endregion
 
         #region Constructor and related
@@ -58,11 +61,13 @@ namespace Raycasting
             _screen = new Vector2(_widthOfViewingFieldInPixels , _heightOfViewingField );
             _halfScreen = _screen / 2;
             _graphics.IsFullScreen = false;
+            
         }
 
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+            Game1.SpriteBatch = _spriteBatch;
             CreateMaze();
             _player = new Player(_maze);
             _player.Position = new Vector2(2.5f, 3.5f);
@@ -98,8 +103,14 @@ namespace Raycasting
                     Console.WriteLine("Starting from folder");
                     new Thread(() =>
                     {
-                        new ImageGetterFromFolder(commandLineParameter).GetImages(GraphicsDevice, _textures, ref _exiting);
-                        new ImageGetterFromZipFiles(commandLineParameter).GetImages(GraphicsDevice, _textures, ref _exiting);
+                        IImageGetter imageGetter =
+                        new ImageGetterFromFolder(commandLineParameter);
+                        imageGetter.TextureLoadedEvent += ImageGetter_TextureLoadedEvent;
+                        imageGetter.GetImages(GraphicsDevice, _textures, ref _exiting);
+                        imageGetter =
+                        new ImageGetterFromZipFiles(commandLineParameter);
+                        imageGetter.TextureLoadedEvent += ImageGetter_TextureLoadedEvent;
+                        imageGetter.GetImages(GraphicsDevice, _textures, ref _exiting);
                     }).Start();
                 }
                 else
@@ -112,9 +123,21 @@ namespace Raycasting
             {
                 new Thread(() =>
                   {
-                      new ImageGetterFromZipFiles().GetImages(GraphicsDevice, _textures, ref _exiting);
-                      new ImageGetterFromFolder().GetImages(GraphicsDevice, _textures, ref _exiting);
+                      IImageGetter imageGetter = new ImageGetterFromFolder();
+                      imageGetter.TextureLoadedEvent += ImageGetter_TextureLoadedEvent;
+                      imageGetter.GetImages(GraphicsDevice, _textures, ref _exiting);
+                      imageGetter = new ImageGetterFromZipFiles();
+                      imageGetter.TextureLoadedEvent += ImageGetter_TextureLoadedEvent;
+                      imageGetter.GetImages(GraphicsDevice, _textures, ref _exiting);
                   }).Start();
+            }
+        }
+
+        private void ImageGetter_TextureLoadedEvent(object sender, TextureEventArgs e)
+        {
+            lock (_sprites)
+            {
+                _sprites.Add(new TextureSprite() { Texture = e.Texture, Movement = Vector2.UnitX / 3, Position = new Vector2(-20, _screen.Y - 200) });
             }
         }
 
@@ -144,16 +167,34 @@ namespace Raycasting
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
+            GetInput();
+            _msForNextSlide -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            if (_msForNextSlide <= 0)
+            {
+                _slideIndex++;
+                _msForNextSlide = _msBetweenSlides;
+            }
+            lock(_sprites)
+            {
+                _sprites.ForEach(sprite => sprite.Update(gameTime));
+            }
+            
+        }
+
+        private void GetInput()
+        {
             var kbd = Keyboard.GetState();
             if (kbd.IsKeyDown(Keys.Escape)) { _exiting = true; this.Exit(); }
             if (kbd.IsKeyDown(Keys.Up)) { _player.MoveForward(); }
             if (kbd.IsKeyDown(Keys.Down)) { _player.MoveBackwards(); }
             if (kbd.IsKeyDown(Keys.Left)) { _player.TurnLeft(); }
             if (kbd.IsKeyDown(Keys.Right)) { _player.TurnRight(); }
-            if (kbd.IsKeyDown(Keys.NumLock) && _oldKeyboardState.IsKeyUp(Keys.NumLock)) {
+
+            if (kbd.IsKeyDown(Keys.NumLock) && _oldKeyboardState.IsKeyUp(Keys.NumLock) && _textures.Count > 0)
+            {
 
                 int modifier = (kbd.IsKeyDown(Keys.LeftShift) || kbd.IsKeyDown(Keys.RightShift)) ? -1 : 1;
-                _textureSetIndex+= modifier;
+                _textureSetIndex += modifier;
                 _textureSetIndex += _textures.Count;
                 _textureSetIndex %= _textures.Count;
             }
@@ -165,7 +206,6 @@ namespace Raycasting
             if (kbd.IsKeyDown(Keys.F10) && _oldKeyboardState.IsKeyUp(Keys.F10))
             {
                 NextRenderSliceMethod();
-
             }
             if (kbd.IsKeyDown(Keys.F1) && _oldKeyboardState.IsKeyUp(Keys.F1))
             { _showHelp = !_showHelp; }
@@ -174,12 +214,6 @@ namespace Raycasting
                 _graphics.ToggleFullScreen();
             }
             _oldKeyboardState = kbd;
-            _msForNextSlide -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
-            if (_msForNextSlide <= 0)
-            {
-                _slideIndex++;
-                _msForNextSlide = _msBetweenSlides;
-            }
         }
 
         private void NextRenderSliceMethod()
@@ -197,6 +231,20 @@ namespace Raycasting
             var renderSliceMethod = GetCurrentSliceRenderMethod();
             if (_psychedelicMode){ RenderAllToTarget(gameTime, renderSliceMethod); }
             else {RenderAll(gameTime, renderSliceMethod);}
+            RenderSprites(gameTime);
+            _spriteBatch.Begin();
+            DrawHelp();
+            _spriteBatch.End();
+        }
+
+        private void RenderSprites(GameTime gameTime)
+        {
+            _spriteBatch.Begin();
+            lock (_sprites)
+            {
+                _sprites.ForEach(sprite => sprite.Draw(gameTime));
+            }
+            _spriteBatch.End();
         }
 
         private Action<CollisionInfo?, Rectangle> GetCurrentSliceRenderMethod()
@@ -240,7 +288,7 @@ namespace Raycasting
 
                 renderMethod(collisionPosition, destinationRectangle);
             }
-            DrawHelp();
+            
             _spriteBatch.End();
         }
 

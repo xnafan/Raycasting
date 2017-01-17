@@ -4,10 +4,11 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System;
 
 namespace Raycasting
 {
-    public class ImageGetterFromFolder : IImageGetter
+    public class ImageGetterFromFolder : BaseImageGetter
     {
 
         public const string AppSettingsKey = "ImageFolderPath";
@@ -18,7 +19,7 @@ namespace Raycasting
             _rootImageFolder = rootImageFolder;
         }
 
-        public void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop)
+        public override void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop)
         {
             List<string> imageFolders = new List<string>();
             try
@@ -44,7 +45,9 @@ namespace Raycasting
                         if (stop) return;
                         using (FileStream fileStream = new FileStream(item, FileMode.Open))
                         {
-                            textures.Add(Texture2D.FromStream(graphicsDevice, fileStream));
+                            Texture2D texture = Texture2D.FromStream(graphicsDevice, fileStream);
+                            textures.Add(texture);
+                            OnTextureLoaded(texture);
                         }
                     }
                     if (textures.Count > 0)

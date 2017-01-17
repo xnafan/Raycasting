@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Raycasting
 {
-    public class ImageGetterFromZipFiles : IImageGetter
+    public class ImageGetterFromZipFiles : BaseImageGetter
     {
         string _itemToOpen;
 
@@ -21,7 +21,7 @@ namespace Raycasting
         }
 
         public const string AppSettingsKey = "ImageFolderPath";
-        public void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop)
+        public override void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop)
         {
             List<string> zipFilesToOpen = new List<string>();
             try
@@ -64,7 +64,9 @@ namespace Raycasting
                                     {
                                         fileStream.CopyTo(ms);
                                         ms.Position = 0; // rewind
-                                        textures.Add(Texture2D.FromStream(graphicsDevice, ms));
+                                        Texture2D texture = Texture2D.FromStream(graphicsDevice, ms);
+                                        textures.Add(texture);
+                                        OnTextureLoaded(texture);
                                     }
                                 }
                             }
@@ -76,5 +78,7 @@ namespace Raycasting
             }
             catch { throw; }
         }
+
+       
     }
 }
