@@ -76,7 +76,7 @@ namespace Raycasting
                     { textureSetListToAddTo.Add(textures.ToArray()); }
                 }
             }
-            catch { throw; }
+            catch { }
         }
 
        

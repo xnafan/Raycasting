@@ -16,7 +16,7 @@ namespace Raycasting
         public Rectangle DestinationRectangle {
             get
             {
-                return new Rectangle((int)Position.X, (int)Position.Y, 200, 200);
+                return new Rectangle((int)Position.X, (int)Position.Y, 100, 100);
             }
         }
         public void Update(GameTime gameTime)

@@ -81,10 +81,12 @@ namespace Raycasting
                 if (!y.HasValue || !map.Contains(realX, (int)y.Value)) { return null; }
                 if (map[realX, (int)y.Value] != 0)
                 {
+                    var fraction = y.Value - (int)y.Value;
+                    if(deltaX < 0) { fraction = 1 - fraction; }
                     return new CollisionInfo()
                     {
                     CollisionPoint = new Vector2(x, y.Value),
-                    PositionOnWall = y.Value - (int)y.Value,
+                    PositionOnWall = fraction,
                     TileHit = new Point(realX, (int)y.Value),
                 };
                 }
@@ -127,10 +129,13 @@ namespace Raycasting
                 if (!x.HasValue || !map.Contains((int)x.Value,realY)) { return null; }
                 if (map[(int)x.Value, realY] != 0)
                 {
+                    var fraction = x.Value - (int)x.Value;
+                    if (deltaY > 0) { fraction = 1 - fraction; }
+
                     return new CollisionInfo()
                     {
                         CollisionPoint = new Vector2(x.Value, y),
-                        PositionOnWall = x.Value - (int)x.Value,
+                        PositionOnWall = fraction,
                         TileHit = new Point((int)x.Value, realY)
 
                     };
