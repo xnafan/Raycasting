@@ -11,6 +11,8 @@ namespace Raycasting
     {
         public Vector2 CollisionPoint { get; set; }
         public Point TileHit { get; set; }
+        public int TileHitValue{ get; set; }
         public float PositionOnWall { get; set; }
+        public float DistanceToCollision{ get; set; }
     }
 }

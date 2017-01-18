@@ -4,3 +4,5 @@
     http://www.playfuljs.com/a-first-person-engine-in-265-lines/
 
  * Change rendering, so it is one pixel strips - fast bredde giver bedre granulering - DONE!
+ 
+ * respect maxDistance in collisionfinding functions

@@ -30,7 +30,7 @@
     <PublisherName>Jakob Farian Krarup &amp; Carsten Goldbæk Nielsen</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>10</ApplicationRevision>
+    <ApplicationRevision>11</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -101,10 +101,10 @@
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RenderData.cs" />
     <Compile Include="Renderer.cs" />
     <Compile Include="Sounds.cs" />
     <Compile Include="TextureSprite.cs" />
-    <Compile Include="Vector2D.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">

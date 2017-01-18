@@ -83,12 +83,15 @@ namespace Raycasting
                 {
                     var fraction = y.Value - (int)y.Value;
                     if(deltaX < 0) { fraction = 1 - fraction; }
+                    var collisionPoint = new Vector2(x, y.Value);
                     return new CollisionInfo()
                     {
-                    CollisionPoint = new Vector2(x, y.Value),
+                    CollisionPoint = collisionPoint,
                     PositionOnWall = fraction,
                     TileHit = new Point(realX, (int)y.Value),
-                };
+                    TileHitValue = map[realX, (int)y.Value],
+                    DistanceToCollision = Vector2.Distance(position, collisionPoint)
+                    };
                 }
                 if(x == lastXCoordinateToCheck) { done = true; }
             }
@@ -120,7 +123,7 @@ namespace Raycasting
             int deltaY = Math.Sign(lastYCoordinateToCheck - firstYCoordinateToCheck);
             var line = LineFormula.FromCoordinateAndDirection(position, directionInRadian);
             bool done = false;
-            for (int y = firstYCoordinateToCheck; !done; y += deltaY)
+            for (int y = firstYCoordinateToCheck; !done ; y += deltaY)
             {
                 float? x = 0;
                 if (directionInDegrees == 90 || directionInDegrees == 270){x = position.X;}
@@ -131,13 +134,14 @@ namespace Raycasting
                 {
                     var fraction = x.Value - (int)x.Value;
                     if (deltaY > 0) { fraction = 1 - fraction; }
-
+                    var collisionPoint = new Vector2(x.Value, y);
                     return new CollisionInfo()
                     {
-                        CollisionPoint = new Vector2(x.Value, y),
+                        CollisionPoint = collisionPoint,
                         PositionOnWall = fraction,
-                        TileHit = new Point((int)x.Value, realY)
-
+                        TileHit = new Point((int)x.Value, realY),
+                        TileHitValue = map[(int)x.Value, realY],
+                        DistanceToCollision = Vector2.Distance(position, collisionPoint)
                     };
                 }
                 if (y == lastYCoordinateToCheck) { done = true; }

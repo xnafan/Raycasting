@@ -2,9 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Raycasting
 {
@@ -14,7 +11,7 @@ namespace Raycasting
         public List<Texture2D[]> Textures { get; set; } = new List<Texture2D[]>();
         public List<TextureSprite> Sprites  = new List<TextureSprite>();
         public Player Player { get; set; }
-        public List<Action<CollisionInfo?, Rectangle>> _renderSliceMethods = new List<Action<CollisionInfo?, Rectangle>>();
+        public List<Action<RenderData>> _renderSliceMethods = new List<Action<RenderData>>();
         public bool PsychedelicMode { get; set; }
         public Rectangle ViewingField { get; set; }
         public int RenderMethodIndex;
@@ -28,8 +25,17 @@ namespace Raycasting
         int _widthOfViewingArcInDegrees = 60;
         SpriteFont _font;
         int[,] _maze;
-        
-        
+        private RenderData[] CompleteRenderData;
+
+        public Texture2D[] CurrentTextureSet
+        {
+            get {
+                if(Textures.Count == 0) { return null; }
+                else{return Textures[TexturesetIndex];}
+            }
+        }
+
+
         public Renderer(int width, int height, Player player, int[,] maze)
         {
             _renderSliceMethods.Add(RenderSliceWithDistanceBasedLighting);
@@ -44,6 +50,7 @@ namespace Raycasting
             _target = new RenderTarget2D(Game1.CurrentGraphicsDevice, Game1.CurrentGraphicsDevice.PresentationParameters.BackBufferWidth, Game1.CurrentGraphicsDevice.PresentationParameters.BackBufferHeight);
             _maze = maze;
             Player = player;
+            CompleteRenderData = new RenderData[ViewingField.Width];
         }
 
         public void Update(GameTime gameTime)
@@ -63,9 +70,39 @@ namespace Raycasting
                     { Sprites.RemoveAt(i); }
                 }
             }
-
+            CalculateRenderData();
         }
 
+        private void CalculateRenderData()
+        {
+            float degreePerPixel = _widthOfViewingArcInDegrees / (float)ViewingField.Width;
+            float halfWidthOfViewingArcInDegrees = _widthOfViewingArcInDegrees / 2;
+            float absoluteAngleOfLeftMostPeripheralVision = Player.ViewingAngle - halfWidthOfViewingArcInDegrees;
+            for (int pixel = 0; pixel < ViewingField.Width; pixel++)
+            {
+                var realAngle = absoluteAngleOfLeftMostPeripheralVision + degreePerPixel * pixel;
+                var angleFromCenter = Math.Abs(Player.ViewingAngle - realAngle);
+                var fisheyeCompensation = (float)Math.Cos(MathHelper.ToRadians(angleFromCenter));
+
+                CollisionInfo? collisionPosition = _maze.GetCollisionPointImproved(Player.Position, realAngle, 100);
+
+                
+
+                if (!collisionPosition.HasValue)
+                {
+                    CompleteRenderData[pixel] = null;
+                    continue;
+                }
+                var adjustedDistanceToCollision = collisionPosition.Value.DistanceToCollision * fisheyeCompensation;
+                var destinationHeight = ViewingField.Height / adjustedDistanceToCollision;
+
+                float percentageOfWidth = pixel / _widthOfViewingArcInDegrees;
+                var destinationRectangle = new Rectangle(pixel, (int)((ViewingField.Height - destinationHeight) / 2),
+                    1, (int)destinationHeight);
+
+                CompleteRenderData[pixel] = new RenderData() { CollisionInfo = collisionPosition.Value, DestinationRectangle = destinationRectangle };            
+            }
+        }
 
         public void Draw(GameTime gameTime)
         {
@@ -73,11 +110,10 @@ namespace Raycasting
             var renderSliceMethod = GetCurrentSliceRenderMethod();
             if (PsychedelicMode) { RenderAllToTarget(gameTime, renderSliceMethod); }
             else { RenderAll(gameTime, renderSliceMethod); }
-            RenderSprites(gameTime);
             Game1.SpriteBatch.Begin();
+            RenderSprites(gameTime);
             DrawHelp();
             Game1.SpriteBatch.End();
-
         }
 
         public void NextTextureSet()
@@ -98,53 +134,26 @@ namespace Raycasting
 
         private void RenderSprites(GameTime gameTime)
         {
-            Game1.SpriteBatch.Begin();
             lock (Sprites)
             {
                 Sprites.ForEach(sprite => sprite.Draw(gameTime));
             }
-            Game1.SpriteBatch.End();
         }
 
-        private Action<CollisionInfo?, Rectangle> GetCurrentSliceRenderMethod()
+        private Action<RenderData> GetCurrentSliceRenderMethod()
         {
-            if (Textures.Count > 0)
-            { return _renderSliceMethods[RenderMethodIndex]; }
-            else
-            {
-                return RenderWhiteSlice;
-            }
+            if (Textures.Count > 0){ return _renderSliceMethods[RenderMethodIndex]; }
+            else{return RenderWhiteSlice;}
         }
 
-        private void RenderAll(GameTime gameTime, Action<CollisionInfo?, Rectangle> renderMethod)
+        private void RenderAll(GameTime gameTime, Action<RenderData> renderMethod)
         {
             Game1.SpriteBatch.Begin();
-            float degreePerPixel = _widthOfViewingArcInDegrees / (float)ViewingField.Width;
-            float halfWidthOfViewingArcInDegrees = _widthOfViewingArcInDegrees / 2;
-            float absoluteAngleOfLeftMostPeripheralVision = Player.ViewingAngle - halfWidthOfViewingArcInDegrees;
+            
             for (int pixel = 0; pixel < ViewingField.Width; pixel++)
             {
-                var realAngle = absoluteAngleOfLeftMostPeripheralVision + degreePerPixel * pixel;
-                var angleFromCenter = Math.Abs(Player.ViewingAngle - realAngle);
-                var fisheyeCompensation = (float)Math.Cos(MathHelper.ToRadians(angleFromCenter));
-
-                CollisionInfo? collisionPosition = _maze.GetCollisionPointImproved(Player.Position, realAngle, 100);
-
-                float distanceToCollision = 1000;
-
-                if (collisionPosition.HasValue)
-                {
-                    distanceToCollision = Vector2.Distance(Player.Position, collisionPosition.Value.CollisionPoint);
-                }
-                else continue;
-                distanceToCollision = distanceToCollision * fisheyeCompensation;
-                var destinationHeight = ViewingField.Height / distanceToCollision;
-
-                float percentageOfWidth = pixel / _widthOfViewingArcInDegrees;
-                var destinationRectangle = new Rectangle(pixel, (int)((ViewingField.Height - destinationHeight) / 2),
-                    1, (int)destinationHeight);
-
-                renderMethod(collisionPosition, destinationRectangle);
+                if(CompleteRenderData[pixel] != null)
+                renderMethod(CompleteRenderData[pixel]);
             }
 
             Game1.SpriteBatch.End();
@@ -158,7 +167,7 @@ namespace Raycasting
             }
         }
 
-        private void RenderAllToTargetTwice(GameTime gameTime, Action<CollisionInfo?, Rectangle> renderSliceMethod)
+        private void RenderAllToTargetTwice(GameTime gameTime, Action<RenderData> renderSliceMethod)
         {
             Game1.CurrentGraphicsDevice.SetRenderTarget(_target);
             RenderAllToTarget(gameTime, renderSliceMethod);
@@ -167,13 +176,12 @@ namespace Raycasting
             RenderAll(gameTime, RenderSliceFromTarget);
         }
 
-        private void RenderAllToTarget(GameTime gameTime, Action<CollisionInfo?, Rectangle> renderSliceMethod)
+        private void RenderAllToTarget(GameTime gameTime, Action<RenderData> renderSliceMethod)
         {
             Game1.CurrentGraphicsDevice.SetRenderTarget(_target);
             RenderAll(gameTime, renderSliceMethod);
             Game1.CurrentGraphicsDevice.SetRenderTarget(null);
             Game1.SpriteBatch.Begin();
-
             var scale = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds);
             scale = 1.4f + Math.Abs(scale);
             Game1.SpriteBatch.Draw(_target, _halfScreen, null, Color.White, 0, _halfScreen, scale, SpriteEffects.None, 0);
@@ -182,65 +190,61 @@ namespace Raycasting
             RenderAll(gameTime, RenderSliceFromTarget);
         }
 
-        private void RenderWhiteSlice(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
+        private void RenderWhiteSlice(RenderData renderData)
         {
             var sourceRectangle1 = new Rectangle(0, 0, 1, 1);
-            float maxDistanceSquared = 7;
-            float distanceSquared = Vector2.Distance(collisionPosition.Value.CollisionPoint, Player.Position);
-            float opacity = (1 - (float)(distanceSquared / maxDistanceSquared));
-            Game1.SpriteBatch.Draw(_white, destinationRectangle, sourceRectangle1, Color.White * opacity);
+            float maxDistance = 7;
+            float opacity = (1 - (float)(renderData.CollisionInfo.Value.DistanceToCollision / maxDistance));
+            Game1.SpriteBatch.Draw(_white, renderData.DestinationRectangle, sourceRectangle1, Color.White * opacity);
         }
 
-        private void RenderSliceFromTarget(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
+        private void RenderSliceFromTarget(RenderData renderData)
         {
             int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = _target.Width / _widthOfViewingArcInDegrees;
-            var sourceRectangle1 = new Rectangle((int)(collisionPosition.Value.PositionOnWall * ViewingField.Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, ViewingField.Height);
-            Game1.SpriteBatch.Draw(_target, destinationRectangle, sourceRectangle1, Color.White);
+            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * ViewingField.Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, ViewingField.Height);
+            Game1.SpriteBatch.Draw(_target, renderData.DestinationRectangle, sourceRectangle1, Color.White);
         }
 
-        private void RenderSlice(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
+        private void RenderSlice(RenderData renderData)
         {
-            int textureIndex1 = _maze[collisionPosition.Value.TileHit.X, collisionPosition.Value.TileHit.Y] - 1;
-            textureIndex1 %= Textures[TexturesetIndex].Length;
-            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = Textures[TexturesetIndex][textureIndex1].Width / _widthOfViewingArcInDegrees;
-            var sourceRectangle1 = new Rectangle((int)(collisionPosition.Value.PositionOnWall * Textures[TexturesetIndex][textureIndex1].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, Textures[TexturesetIndex][textureIndex1].Height);
-            Game1.SpriteBatch.Draw(Textures[TexturesetIndex][textureIndex1], destinationRectangle, sourceRectangle1, Color.White);
+            int textureIndex1 = renderData.CollisionInfo.Value.TileHitValue - 1;
+            textureIndex1 %= CurrentTextureSet.Length;
+            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = CurrentTextureSet[textureIndex1].Width / _widthOfViewingArcInDegrees;
+            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, CurrentTextureSet[textureIndex1].Height);
+            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1], renderData.DestinationRectangle, sourceRectangle1, Color.White);
         }
 
-        private void RenderSliceWithDistanceBasedLighting(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
+        private void RenderSliceWithDistanceBasedLighting(RenderData renderData)
         {
-            int textureIndex1 = _maze[collisionPosition.Value.TileHit.X, collisionPosition.Value.TileHit.Y] - 1;
-            textureIndex1 %= Textures[TexturesetIndex].Length;
-            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = Textures[TexturesetIndex][textureIndex1].Width / _widthOfViewingArcInDegrees;
-            var sourceRectangle1 = new Rectangle((int)(collisionPosition.Value.PositionOnWall * Textures[TexturesetIndex][textureIndex1].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, Textures[TexturesetIndex][textureIndex1].Height);
-            float maxDistanceSquared = 7;
-            float distanceSquared = Vector2.Distance(collisionPosition.Value.CollisionPoint, Player.Position);
-            float opacity = (1 - (float)(distanceSquared / maxDistanceSquared));
-            Game1.SpriteBatch.Draw(Textures[TexturesetIndex][textureIndex1], destinationRectangle, sourceRectangle1, Color.White * opacity);
+            int textureIndex1 = renderData.CollisionInfo.Value.TileHitValue - 1;
+            textureIndex1 %= CurrentTextureSet.Length;
+            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = CurrentTextureSet[textureIndex1].Width / _widthOfViewingArcInDegrees;
+            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, CurrentTextureSet[textureIndex1].Height);
+            float maxDistance = 7;
+            float opacity = (1 - (float)(renderData.CollisionInfo.Value.DistanceToCollision / maxDistance));
+            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1], renderData.DestinationRectangle, sourceRectangle1, Color.White * opacity);
         }
 
         float BezierBlend(float t) { return (float)Math.Pow(t, 2) * (3.0f - 2.0f * t); }
 
-        private void RenderSliceForSlideShow(CollisionInfo? collisionPosition, Rectangle destinationRectangle)
+        private void RenderSliceForSlideShow(RenderData renderData)
         {
-            int textureIndex1 = _maze[collisionPosition.Value.TileHit.X, collisionPosition.Value.TileHit.Y] - 1 + _slideIndex;
-            textureIndex1 %= Textures[TexturesetIndex].Length;
+            int textureIndex1 = renderData.CollisionInfo.Value.TileHitValue - 1 + _slideIndex;
+            textureIndex1 %= CurrentTextureSet.Length;
 
-            int textureIndex2 = (textureIndex1 + 1) % Textures[TexturesetIndex].Length;
-            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap1 = Textures[TexturesetIndex][textureIndex1].Width / _widthOfViewingArcInDegrees;
+            int textureIndex2 = (textureIndex1 + 1) % CurrentTextureSet.Length;
+            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap1 = CurrentTextureSet[textureIndex1].Width / _widthOfViewingArcInDegrees;
 
-            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap2 = Textures[TexturesetIndex][textureIndex2].Width / _widthOfViewingArcInDegrees;
-            var sourceRectangle1 = new Rectangle((int)(collisionPosition.Value.PositionOnWall * Textures[TexturesetIndex][textureIndex1].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap1, Textures[TexturesetIndex][textureIndex1].Height);
-            var sourceRectangle2 = new Rectangle((int)(collisionPosition.Value.PositionOnWall * Textures[TexturesetIndex][textureIndex2].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap2, Textures[TexturesetIndex][textureIndex2].Height);
+            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap2 = CurrentTextureSet[textureIndex2].Width / _widthOfViewingArcInDegrees;
+            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap1, CurrentTextureSet[textureIndex1].Height);
+            var sourceRectangle2 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex2].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap2, CurrentTextureSet[textureIndex2].Height);
 
             float transparency = _msForNextSlide / _msBetweenSlides;
             transparency = BezierBlend(transparency);
-            float maxDistanceSquared = 7;
-            float distanceSquared = Vector2.Distance(collisionPosition.Value.CollisionPoint, Player.Position);
-            float opacity = (1 - (float)(distanceSquared / maxDistanceSquared));
-
-            Game1.SpriteBatch.Draw(Textures[TexturesetIndex][textureIndex1], destinationRectangle, sourceRectangle1, Color.White);
-            Game1.SpriteBatch.Draw(Textures[TexturesetIndex][textureIndex2], destinationRectangle, sourceRectangle2, Color.White * (1 - transparency));
+            float maxDistance = 7;
+            float opacity = (1 - (float)(renderData.CollisionInfo.Value.DistanceToCollision / maxDistance));
+            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1], renderData.DestinationRectangle, sourceRectangle1, Color.White);
+            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex2], renderData.DestinationRectangle, sourceRectangle2, Color.White * (1 - transparency));
         }
 
         private void DrawHelp()
