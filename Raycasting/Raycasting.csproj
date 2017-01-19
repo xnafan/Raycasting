@@ -30,7 +30,7 @@
     <PublisherName>Jakob Farian Krarup &amp; Carsten Goldbæk Nielsen</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>11</ApplicationRevision>
+    <ApplicationRevision>12</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -101,7 +101,7 @@
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RenderData.cs" />
+    <Compile Include="RenderDataForSlice.cs" />
     <Compile Include="Renderer.cs" />
     <Compile Include="Sounds.cs" />
     <Compile Include="TextureSprite.cs" />

@@ -60,7 +60,9 @@ namespace Raycasting
                         foreach (var entry in archive.Entries)
                         {
                             if (stop) return;
-                            if (entry.Name.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
+                            if (entry.Name.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                                || entry.Name.EndsWith(".gng", StringComparison.OrdinalIgnoreCase)
+                                || entry.Name.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
                             {
                                 try
                                 {

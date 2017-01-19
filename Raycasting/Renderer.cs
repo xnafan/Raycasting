@@ -11,7 +11,7 @@ namespace Raycasting
         public List<Texture2D[]> Textures { get; set; } = new List<Texture2D[]>();
         public List<TextureSprite> Sprites  = new List<TextureSprite>();
         public Player Player { get; set; }
-        public List<Action<RenderData>> _renderSliceMethods = new List<Action<RenderData>>();
+        public List<Action<RenderDataForSlice>> _renderSliceMethods = new List<Action<RenderDataForSlice>>();
         public bool PsychedelicMode { get; set; }
         public Rectangle ViewingField { get; set; }
         public int RenderMethodIndex;
@@ -25,7 +25,7 @@ namespace Raycasting
         int _widthOfViewingArcInDegrees = 60;
         SpriteFont _font;
         int[,] _maze;
-        private RenderData[] CompleteRenderData;
+        private RenderDataForSlice[] CompleteRenderData;
         float[] fisheyeCompensations;
 
         public Texture2D[] CurrentTextureSet
@@ -51,7 +51,7 @@ namespace Raycasting
             _target = new RenderTarget2D(Game1.CurrentGraphicsDevice, Game1.CurrentGraphicsDevice.PresentationParameters.BackBufferWidth, Game1.CurrentGraphicsDevice.PresentationParameters.BackBufferHeight);
             _maze = maze;
             Player = player;
-            CompleteRenderData = new RenderData[ViewingField.Width];
+            CompleteRenderData = new RenderDataForSlice[ViewingField.Width];
             PrecalculateFisheyeCompensations();
         }
 
@@ -110,7 +110,7 @@ namespace Raycasting
                 var destinationRectangle = new Rectangle(pixel, (int)((ViewingField.Height - destinationHeight) / 2),
                     1, (int)destinationHeight);
 
-                CompleteRenderData[pixel] = new RenderData() { CollisionInfo = collisionPosition.Value, DestinationRectangle = destinationRectangle };            
+                CompleteRenderData[pixel] = new RenderDataForSlice() { CollisionInfo = collisionPosition.Value, DestinationRectangle = destinationRectangle };            
             }
         }
 
@@ -150,13 +150,13 @@ namespace Raycasting
             }
         }
 
-        private Action<RenderData> GetCurrentSliceRenderMethod()
+        private Action<RenderDataForSlice> GetCurrentSliceRenderMethod()
         {
             if (Textures.Count > 0){ return _renderSliceMethods[RenderMethodIndex]; }
             else{return RenderWhiteSlice;}
         }
 
-        private void RenderAll(GameTime gameTime, Action<RenderData> renderMethod)
+        private void RenderAll(GameTime gameTime, Action<RenderDataForSlice> renderMethod)
         {
             Game1.SpriteBatch.Begin();
             
@@ -176,7 +176,7 @@ namespace Raycasting
             }
         }
 
-        private void RenderAllToTargetTwice(GameTime gameTime, Action<RenderData> renderSliceMethod)
+        private void RenderAllToTargetTwice(GameTime gameTime, Action<RenderDataForSlice> renderSliceMethod)
         {
             Game1.CurrentGraphicsDevice.SetRenderTarget(_target);
             RenderAllToTarget(gameTime, renderSliceMethod);
@@ -185,7 +185,7 @@ namespace Raycasting
             RenderAll(gameTime, RenderSliceFromTarget);
         }
 
-        private void RenderAllToTarget(GameTime gameTime, Action<RenderData> renderSliceMethod)
+        private void RenderAllToTarget(GameTime gameTime, Action<RenderDataForSlice> renderSliceMethod)
         {
             Game1.CurrentGraphicsDevice.SetRenderTarget(_target);
             RenderAll(gameTime, renderSliceMethod);
@@ -199,7 +199,7 @@ namespace Raycasting
             RenderAll(gameTime, RenderSliceFromTarget);
         }
 
-        private void RenderWhiteSlice(RenderData renderData)
+        private void RenderWhiteSlice(RenderDataForSlice renderData)
         {
             var sourceRectangle1 = new Rectangle(0, 0, 1, 1);
             float maxDistance = 7;
@@ -207,14 +207,14 @@ namespace Raycasting
             Game1.SpriteBatch.Draw(_white, renderData.DestinationRectangle, sourceRectangle1, Color.White * opacity);
         }
 
-        private void RenderSliceFromTarget(RenderData renderData)
+        private void RenderSliceFromTarget(RenderDataForSlice renderData)
         {
             int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = _target.Width / _widthOfViewingArcInDegrees;
             var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * ViewingField.Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, ViewingField.Height);
             Game1.SpriteBatch.Draw(_target, renderData.DestinationRectangle, sourceRectangle1, Color.White);
         }
 
-        private void RenderSlice(RenderData renderData)
+        private void RenderSlice(RenderDataForSlice renderData)
         {
             int textureIndex1 = renderData.CollisionInfo.Value.TileHitValue - 1;
             textureIndex1 %= CurrentTextureSet.Length;
@@ -223,7 +223,7 @@ namespace Raycasting
             Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1], renderData.DestinationRectangle, sourceRectangle1, Color.White);
         }
 
-        private void RenderSliceWithDistanceBasedLighting(RenderData renderData)
+        private void RenderSliceWithDistanceBasedLighting(RenderDataForSlice renderData)
         {
             int textureIndex1 = renderData.CollisionInfo.Value.TileHitValue - 1;
             textureIndex1 %= CurrentTextureSet.Length;
@@ -236,7 +236,7 @@ namespace Raycasting
 
         float BezierBlend(float t) { return (float)Math.Pow(t, 2) * (3.0f - 2.0f * t); }
 
-        private void RenderSliceForSlideShow(RenderData renderData)
+        private void RenderSliceForSlideShow(RenderDataForSlice renderData)
         {
             int textureIndex1 = renderData.CollisionInfo.Value.TileHitValue - 1 + _slideIndex;
             textureIndex1 %= CurrentTextureSet.Length;

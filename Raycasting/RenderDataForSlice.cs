@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Raycasting
 {
-    public class RenderData
+    public class RenderDataForSlice
     {
         public CollisionInfo? CollisionInfo { set; get; }
         public Rectangle DestinationRectangle { set; get; }

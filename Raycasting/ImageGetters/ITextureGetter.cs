@@ -6,6 +6,7 @@ namespace Raycasting
 {
     public interface IImageGetter
     {
+        
         void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop);
       
         event TextureEventHandler TextureLoadedEvent;

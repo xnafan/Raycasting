@@ -40,7 +40,9 @@ namespace Raycasting
                 for (int i = 0; i < imageFolders.Count; i++)
                 {
                     List<Texture2D> textures = new List<Texture2D>();
-                    var files = Directory.GetFiles(imageFolders[i], "*.jpg");
+                    var files = Directory.GetFiles(imageFolders[i], "*.jpg").ToList();
+                    files.AddRange(Directory.GetFiles(imageFolders[i], "*.png"));
+                    files.AddRange(Directory.GetFiles(imageFolders[i], "*.gif"));
                     foreach (var item in files)
                     {
                         if (stop) return;
