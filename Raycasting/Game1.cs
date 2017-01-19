@@ -64,7 +64,7 @@ namespace Raycasting
                 parameter = parameter.Replace("\"", "");
             }
 
-            if (parameter == null || Directory.Exists(parameter))
+            if (parameter == null || Directory.Exists(parameter) || (File.Exists(parameter) && Path.GetExtension(parameter) != ".zip"))
             {
                 Console.WriteLine("Starting from folder");
                 new Thread(() =>

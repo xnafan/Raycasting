@@ -15,33 +15,39 @@ namespace Raycasting
     {
 
         public const string AppSettingsKey = "ImageFolderPath";
-        private string _rootImageFolder;
+        private string _imageSource;
 
         public ImageGetterFromFolder(string rootImageFolder = null)
         {
-            _rootImageFolder = rootImageFolder;
+            _imageSource = rootImageFolder;
         }
 
 
         public override void GetImages(GraphicsDevice graphicsDevice, List<IImageSource[]> textureSetListToAddTo, ref bool stop)
         {
             List<string> imageFolders = new List<string>();
+
             string debugInfoPictureFileName = "";
             try
             {
-                if (string.IsNullOrWhiteSpace(_rootImageFolder))
+                if (string.IsNullOrWhiteSpace(_imageSource))
                 {
                     var _runningFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    _rootImageFolder = ConfigurationManager.AppSettings[AppSettingsKey] ?? _runningFolder;
+                    _imageSource = ConfigurationManager.AppSettings[AppSettingsKey] ?? _runningFolder;
                 }
-                if (Directory.Exists(_rootImageFolder))
+                if (Directory.Exists(_imageSource))
                 {
-                    imageFolders = Directory.GetDirectories(_rootImageFolder).ToList();
-                    imageFolders.Add(_rootImageFolder);
+                    imageFolders = Directory.GetDirectories(_imageSource).ToList();
+                    imageFolders.Add(_imageSource);
                 }
-
-
-                var tempTextures = new List<Texture2D[]>();
+                else
+                {
+                    List<IImageSource> textures = new List<ImageSources.IImageSource>();
+                    AddFile(textures, _imageSource);
+                    textureSetListToAddTo.Add(textures.ToArray());
+                    return;
+                }
+                
                 for (int i = 0; i < imageFolders.Count; i++)
                 {
                     List<IImageSource> textures = new List<IImageSource>();
@@ -55,9 +61,7 @@ namespace Raycasting
                         if (stop) return;
                         try
                         {
-                            IImageSource source = ImageSourceFactory.CreateSourceFromFile(item);
-                            textures.Add(source);
-                            OnTextureLoaded(source.CurrentTexture);
+                            AddFile(textures, item);
                         }
                         catch (Exception ex)
                         {
@@ -74,40 +78,12 @@ namespace Raycasting
                 throw new Exception(string.Format("Error loading image '{0}'. Error is: {1}", debugInfoPictureFileName, ex.ToString()), ex);
             }
         }
-        public static List<Texture2D> AnimatedGifToTextureList(string imagePath)
+
+        private void AddFile(List<IImageSource> textures, string item)
         {
-            var textures = new List<Texture2D>();
-            Image gifImg = Image.FromFile(imagePath);
-            FrameDimension dimension = new FrameDimension(gifImg.FrameDimensionsList[0]);
-            int numberOfFrames = gifImg.GetFrameCount(dimension);
-            for (int frameCounter = 0; frameCounter < numberOfFrames; frameCounter++)
-            {
-                gifImg.SelectActiveFrame(dimension, frameCounter);
-                Texture2D texture = BitmapToTexture2D(Game1.CurrentGraphicsDevice, (Bitmap)gifImg);
-                textures.Add(texture);
-            }
-            return textures;
-        }
-
-        static Texture2D BitmapToTexture2D(
-   GraphicsDevice GraphicsDevice,
-   System.Drawing.Bitmap image)
-        {
-            // Buffer size is size of color array multiplied by 4 because   
-            // each pixel has four color bytes  
-            int bufferSize = image.Height * image.Width * 4;
-
-            // Create new memory stream and save image to stream so   
-            // we don't have to save and read file  
-            System.IO.MemoryStream memoryStream =
-              new System.IO.MemoryStream(bufferSize);
-            image.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
-
-            // Creates a texture from IO.Stream - our memory stream  
-            Texture2D texture = Texture2D.FromStream(
-              GraphicsDevice, memoryStream);
-
-            return texture;
+            IImageSource source = ImageSourceFactory.CreateSourceFromFile(item);
+            textures.Add(source);
+            OnTextureLoaded(source.CurrentTexture);
         }
     }
 }
