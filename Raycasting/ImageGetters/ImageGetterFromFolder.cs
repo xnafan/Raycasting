@@ -51,6 +51,7 @@ namespace Raycasting
 
                     foreach (var item in files)
                     {
+                        Console.WriteLine(item);
                         if (stop) return;
                         try
                         {

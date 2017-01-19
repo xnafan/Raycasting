@@ -38,6 +38,7 @@ namespace Raycasting.ImageSources
             if (numberOfFrames > 1)
             {
                     var animSource = new AnimatedImageSource(AnimatedGifToTextureList(gifImg));
+                    animSource.MsBetweenImages = GetDelay(gifImg);
                     Renderer.AnimatedGifs.Add(animSource);
                     return animSource;
                 }
@@ -48,7 +49,13 @@ namespace Raycasting.ImageSources
         }
     }
 
-    public static List<Texture2D> AnimatedGifToTextureList(Image gifImg)
+        private static float GetDelay(Image gifImg)
+        {
+            var propertyItem = gifImg.GetPropertyItem(20736);
+          return (int)Math.Min(Math.Max((propertyItem.Value[0] + propertyItem.Value[1] * 256) * 10, 25), 250);
+        }
+
+        public static List<Texture2D> AnimatedGifToTextureList(Image gifImg)
     {
         var textures = new List<Texture2D>();
 
