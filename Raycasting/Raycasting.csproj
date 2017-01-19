@@ -132,14 +132,20 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="Clean.zip">
+    <Content Include="Images_Wallpaper.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Bricks.zip">
+    <Content Include="Images_Bricks.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Bricks - Copy.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="Images_1stBricks.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images_AnimatedGifs.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images_AnimatedPsychedelicGifs.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Raycasting_TemporaryKey.pfx" />
   </ItemGroup>

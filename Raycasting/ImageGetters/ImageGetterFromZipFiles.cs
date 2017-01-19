@@ -3,6 +3,7 @@ using Raycasting.ImageSources;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -70,16 +71,9 @@ namespace Raycasting
                                     debugInfoPictureFileName = entry.FullName;
                                     using (Stream fileStream = entry.Open())
                                     {
-                                        using (var ms = new MemoryStream())
-                                        {
-
-
-                                            fileStream.CopyTo(ms);
-                                            ms.Position = 0; // rewind
-                                            Texture2D texture = Texture2D.FromStream(graphicsDevice, ms);
-                                            textures.Add(new ImageSource(texture));
-                                            OnTextureLoaded(texture);
-                                        }
+                                        IImageSource source = ImageSourceFactory.CreateSourceFromStream(fileStream, entry.FullName);
+                                        textures.Add(source);
+                                        OnTextureLoaded(source.CurrentTexture);
                                     }
                                 }
                                 catch (Exception ex)
