@@ -26,6 +26,7 @@ namespace Raycasting
         SpriteFont _font;
         int[,] _maze;
         private RenderData[] CompleteRenderData;
+        float[] fisheyeCompensations;
 
         public Texture2D[] CurrentTextureSet
         {
@@ -51,6 +52,19 @@ namespace Raycasting
             _maze = maze;
             Player = player;
             CompleteRenderData = new RenderData[ViewingField.Width];
+            PrecalculateFisheyeCompensations();
+        }
+
+        private void PrecalculateFisheyeCompensations()
+        {
+            float degreePerPixel = _widthOfViewingArcInDegrees / (float)ViewingField.Width;
+            fisheyeCompensations = new float[(int)_screen.X];
+            for (int pixel = 0; pixel < ViewingField.Width; pixel++)
+            {
+                var realAngle = degreePerPixel * pixel - (_widthOfViewingArcInDegrees / 2);
+                var angleFromCenter = Math.Abs(Player.ViewingAngle - realAngle);
+                 fisheyeCompensations[pixel] = (float)Math.Cos(MathHelper.ToRadians(angleFromCenter));
+            }
         }
 
         public void Update(GameTime gameTime)
@@ -72,7 +86,7 @@ namespace Raycasting
             }
             CalculateRenderData();
         }
-
+        
         private void CalculateRenderData()
         {
             float degreePerPixel = _widthOfViewingArcInDegrees / (float)ViewingField.Width;
@@ -82,18 +96,14 @@ namespace Raycasting
             {
                 var realAngle = absoluteAngleOfLeftMostPeripheralVision + degreePerPixel * pixel;
                 var angleFromCenter = Math.Abs(Player.ViewingAngle - realAngle);
-                var fisheyeCompensation = (float)Math.Cos(MathHelper.ToRadians(angleFromCenter));
-
                 CollisionInfo? collisionPosition = _maze.GetCollisionPointImproved(Player.Position, realAngle, 100);
-
                 
-
                 if (!collisionPosition.HasValue)
                 {
                     CompleteRenderData[pixel] = null;
                     continue;
                 }
-                var adjustedDistanceToCollision = collisionPosition.Value.DistanceToCollision * fisheyeCompensation;
+                var adjustedDistanceToCollision = collisionPosition.Value.DistanceToCollision * fisheyeCompensations[pixel];
                 var destinationHeight = ViewingField.Height / adjustedDistanceToCollision;
 
                 float percentageOfWidth = pixel / _widthOfViewingArcInDegrees;
@@ -155,7 +165,6 @@ namespace Raycasting
                 if(CompleteRenderData[pixel] != null)
                 renderMethod(CompleteRenderData[pixel]);
             }
-
             Game1.SpriteBatch.End();
         }
 

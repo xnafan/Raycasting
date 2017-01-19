@@ -24,6 +24,9 @@ namespace Raycasting
         public override void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop)
         {
             List<string> zipFilesToOpen = new List<string>();
+            string debugInfoZipFileName = "";
+            string debugInfoPictureFileName = "";
+
             try
             {
                 string imageFolder = null;
@@ -51,6 +54,7 @@ namespace Raycasting
                 for (int i = 0; i < zipFilesToOpen.Count(); i++)
                 {
                     List<Texture2D> textures = new List<Texture2D>();
+                    debugInfoZipFileName = zipFilesToOpen[i];
                     using (ZipArchive archive = ZipFile.OpenRead(zipFilesToOpen[i]))
                     {
                         foreach (var entry in archive.Entries)
@@ -58,16 +62,28 @@ namespace Raycasting
                             if (stop) return;
                             if (entry.Name.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
                             {
-                                using (Stream fileStream = entry.Open())
+                                try
                                 {
-                                    using (var ms = new MemoryStream())
+                                    debugInfoPictureFileName = entry.FullName;
+                                    using (Stream fileStream = entry.Open())
                                     {
-                                        fileStream.CopyTo(ms);
-                                        ms.Position = 0; // rewind
-                                        Texture2D texture = Texture2D.FromStream(graphicsDevice, ms);
-                                        textures.Add(texture);
-                                        OnTextureLoaded(texture);
+                                        using (var ms = new MemoryStream())
+                                        {
+
+
+                                            fileStream.CopyTo(ms);
+                                            ms.Position = 0; // rewind
+                                            Texture2D texture = Texture2D.FromStream(graphicsDevice, ms);
+                                            textures.Add(texture);
+                                            OnTextureLoaded(texture);
+
+
+                                        }
                                     }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(string.Format("Error loading image '{0}' from file '{1}'. Error is: {2}", debugInfoPictureFileName, debugInfoZipFileName, ex.Message));
                                 }
                             }
                         }
@@ -76,9 +92,13 @@ namespace Raycasting
                     { textureSetListToAddTo.Add(textures.ToArray()); }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+
+                throw new Exception(string.Format("Error loading image '{0}' from file '{1}'. Error is: {2}", debugInfoPictureFileName, debugInfoZipFileName, ex.ToString()), ex);
+            }
         }
 
-       
+
     }
 }

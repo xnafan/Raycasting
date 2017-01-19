@@ -23,7 +23,6 @@ namespace Raycasting
         Random _rnd = new Random();
         KeyboardState _oldKeyboardState;
         private bool _exiting;
-        int _width = 1200, _height = 800;
         #endregion
 
         #region Constructor and related
@@ -32,10 +31,9 @@ namespace Raycasting
             ContentManager = Content;
             Content.RootDirectory = "Content";
             _graphics = new GraphicsDeviceManager(this);
-            _graphics.PreferredBackBufferHeight = _height;
-            _graphics.PreferredBackBufferWidth = _width;
-            _graphics.IsFullScreen = false;
-
+            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+            _graphics.IsFullScreen = true;
         }
 
         protected override void LoadContent()
@@ -50,7 +48,7 @@ namespace Raycasting
             _player.ViewingAngle = 0;
 
             Sounds.Instance.Bump = Content.Load<SoundEffect>("Bump");
-            _renderer = new Renderer(_width, _height, _player, _maze);
+            _renderer = new Renderer(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height, _player, _maze);
             GetTextures();
         }
 

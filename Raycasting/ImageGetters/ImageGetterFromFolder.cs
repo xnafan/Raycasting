@@ -22,6 +22,7 @@ namespace Raycasting
         public override void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop)
         {
             List<string> imageFolders = new List<string>();
+            string debugInfoPictureFileName = "";
             try
             {
                 if (string.IsNullOrWhiteSpace(_rootImageFolder))
@@ -43,18 +44,27 @@ namespace Raycasting
                     foreach (var item in files)
                     {
                         if (stop) return;
+                        try { 
                         using (FileStream fileStream = new FileStream(item, FileMode.Open))
                         {
                             Texture2D texture = Texture2D.FromStream(graphicsDevice, fileStream);
                             textures.Add(texture);
                             OnTextureLoaded(texture);
                         }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(string.Format("Error loading image '{0}'. Error is: {1}", debugInfoPictureFileName,  ex.Message));
+                        }
                     }
                     if (textures.Count > 0)
                     { textureSetListToAddTo.Add(textures.ToArray()); }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                throw new Exception(string.Format("Error loading image '{0}'. Error is: {1}", debugInfoPictureFileName, ex.ToString()), ex);
+            }
         }
     }
 }
