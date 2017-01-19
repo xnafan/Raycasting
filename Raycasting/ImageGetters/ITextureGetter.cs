@@ -1,13 +1,14 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System;
+using Raycasting.ImageSources;
 
 namespace Raycasting
 {
     public interface IImageGetter
     {
         
-        void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop);
+        void GetImages(GraphicsDevice graphicsDevice, List<IImageSource[]> textureSetListToAddTo, ref bool stop);
       
         event TextureEventHandler TextureLoadedEvent;
 
@@ -23,7 +24,7 @@ namespace Raycasting
     {
         public event TextureEventHandler TextureLoadedEvent;
 
-        public abstract void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop);
+        public abstract void GetImages(GraphicsDevice graphicsDevice, List<IImageSource[]> textureSetListToAddTo, ref bool stop);
 
         protected virtual void OnTextureLoaded(Texture2D texture)
         {

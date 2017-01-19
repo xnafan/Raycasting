@@ -30,7 +30,7 @@
     <PublisherName>Jakob Farian Krarup &amp; Carsten Goldbæk Nielsen</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>12</ApplicationRevision>
+    <ApplicationRevision>13</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -91,11 +91,15 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ImageSources\AnimatedImageSource.cs" />
     <Compile Include="CollisionInfo.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="ImageGetters\ITextureGetter.cs" />
     <Compile Include="ImageGetters\ImageGetterFromZipFiles.cs" />
     <Compile Include="ImageGetters\ImageGetterFromFolder.cs" />
+    <Compile Include="ImageSources\IImageSource.cs" />
+    <Compile Include="ImageSources\ImageSource.cs" />
+    <Compile Include="ImageSources\ImageSourceFactory.cs" />
     <Compile Include="LineFormula.cs" />
     <Compile Include="MapHelper.cs" />
     <Compile Include="Player.cs" />
@@ -112,6 +116,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Xml" />

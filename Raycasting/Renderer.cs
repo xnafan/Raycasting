@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Raycasting.ImageSources;
 using System;
 using System.Collections.Generic;
 
@@ -8,10 +9,11 @@ namespace Raycasting
     public class Renderer
     {
         public bool ShowHelp { get; set; }
-        public List<Texture2D[]> Textures { get; set; } = new List<Texture2D[]>();
+        public List<IImageSource[]> Textures { get; set; } = new List<IImageSource[]>();
         public List<TextureSprite> Sprites  = new List<TextureSprite>();
         public Player Player { get; set; }
         public List<Action<RenderDataForSlice>> _renderSliceMethods = new List<Action<RenderDataForSlice>>();
+        public static List<AnimatedImageSource> AnimatedGifs = new List<AnimatedImageSource>();
         public bool PsychedelicMode { get; set; }
         public Rectangle ViewingField { get; set; }
         public int RenderMethodIndex;
@@ -28,7 +30,7 @@ namespace Raycasting
         private RenderDataForSlice[] CompleteRenderData;
         float[] fisheyeCompensations;
 
-        public Texture2D[] CurrentTextureSet
+        public IImageSource[] CurrentTextureSet
         {
             get {
                 if(Textures.Count == 0) { return null; }
@@ -39,6 +41,7 @@ namespace Raycasting
 
         public Renderer(int width, int height, Player player, int[,] maze)
         {
+            //_animatedGif = new AnimatedImageSource(@"c:\D\Dropbox\Billeder og sjove filmklip\Fun\a8bnVZ1_460sa.gif");
             _renderSliceMethods.Add(RenderSliceWithDistanceBasedLighting);
             _renderSliceMethods.Add(RenderSliceForSlideShow);
             _renderSliceMethods.Add(RenderSlice);
@@ -85,6 +88,7 @@ namespace Raycasting
                 }
             }
             CalculateRenderData();
+            AnimatedGifs.ForEach(gif => gif.Update(gameTime));
         }
         
         private void CalculateRenderData()
@@ -141,6 +145,14 @@ namespace Raycasting
             TexturesetIndex %= Textures.Count;
         }
 
+        public void NextRenderSliceMethod()
+        {
+            if (Textures.Count > 0)
+            {
+                RenderMethodIndex++;
+                RenderMethodIndex %= _renderSliceMethods.Count;
+            }
+        }
 
         private void RenderSprites(GameTime gameTime)
         {
@@ -218,20 +230,22 @@ namespace Raycasting
         {
             int textureIndex1 = renderData.CollisionInfo.Value.TileHitValue - 1;
             textureIndex1 %= CurrentTextureSet.Length;
-            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = CurrentTextureSet[textureIndex1].Width / _widthOfViewingArcInDegrees;
-            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, CurrentTextureSet[textureIndex1].Height);
-            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1], renderData.DestinationRectangle, sourceRectangle1, Color.White);
+            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = CurrentTextureSet[textureIndex1].CurrentTexture.Width / _widthOfViewingArcInDegrees;
+            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].CurrentTexture.Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, CurrentTextureSet[textureIndex1].CurrentTexture.Height);
+            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1].CurrentTexture, renderData.DestinationRectangle, sourceRectangle1, Color.White);
+            //var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * _animatedGif.CurrentTexture.Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, _animatedGif.CurrentTexture.Height);
+            //Game1.SpriteBatch.Draw(_animatedGif.CurrentTexture, renderData.DestinationRectangle, sourceRectangle1, Color.White);
         }
 
         private void RenderSliceWithDistanceBasedLighting(RenderDataForSlice renderData)
         {
             int textureIndex1 = renderData.CollisionInfo.Value.TileHitValue - 1;
             textureIndex1 %= CurrentTextureSet.Length;
-            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = CurrentTextureSet[textureIndex1].Width / _widthOfViewingArcInDegrees;
-            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, CurrentTextureSet[textureIndex1].Height);
+            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = CurrentTextureSet[textureIndex1].CurrentTexture.Width / _widthOfViewingArcInDegrees;
+            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].CurrentTexture.Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, CurrentTextureSet[textureIndex1].CurrentTexture.Height);
             float maxDistance = 7;
             float opacity = (1 - (float)(renderData.CollisionInfo.Value.DistanceToCollision / maxDistance));
-            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1], renderData.DestinationRectangle, sourceRectangle1, Color.White * opacity);
+            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1].CurrentTexture, renderData.DestinationRectangle, sourceRectangle1, Color.White * opacity);
         }
 
         float BezierBlend(float t) { return (float)Math.Pow(t, 2) * (3.0f - 2.0f * t); }
@@ -242,18 +256,18 @@ namespace Raycasting
             textureIndex1 %= CurrentTextureSet.Length;
 
             int textureIndex2 = (textureIndex1 + 1) % CurrentTextureSet.Length;
-            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap1 = CurrentTextureSet[textureIndex1].Width / _widthOfViewingArcInDegrees;
+            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap1 = CurrentTextureSet[textureIndex1].CurrentTexture.Width / _widthOfViewingArcInDegrees;
 
-            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap2 = CurrentTextureSet[textureIndex2].Width / _widthOfViewingArcInDegrees;
-            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap1, CurrentTextureSet[textureIndex1].Height);
-            var sourceRectangle2 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex2].Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap2, CurrentTextureSet[textureIndex2].Height);
+            int _pixelsPerDegreeOfViewingAngleFromSourceBitmap2 = CurrentTextureSet[textureIndex2].CurrentTexture.Width / _widthOfViewingArcInDegrees;
+            var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].CurrentTexture.Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap1, CurrentTextureSet[textureIndex1].CurrentTexture.Height);
+            var sourceRectangle2 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex2].CurrentTexture.Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap2, CurrentTextureSet[textureIndex2].CurrentTexture.Height);
 
             float transparency = _msForNextSlide / _msBetweenSlides;
             transparency = BezierBlend(transparency);
             float maxDistance = 7;
             float opacity = (1 - (float)(renderData.CollisionInfo.Value.DistanceToCollision / maxDistance));
-            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1], renderData.DestinationRectangle, sourceRectangle1, Color.White);
-            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex2], renderData.DestinationRectangle, sourceRectangle2, Color.White * (1 - transparency));
+            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1].CurrentTexture, renderData.DestinationRectangle, sourceRectangle1, Color.White);
+            Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex2].CurrentTexture, renderData.DestinationRectangle, sourceRectangle2, Color.White * (1 - transparency));
         }
 
         private void DrawHelp()

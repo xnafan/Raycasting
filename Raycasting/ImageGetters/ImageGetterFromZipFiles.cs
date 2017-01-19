@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
+using Raycasting.ImageSources;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -21,7 +22,7 @@ namespace Raycasting
         }
 
         public const string AppSettingsKey = "ImageFolderPath";
-        public override void GetImages(GraphicsDevice graphicsDevice, List<Texture2D[]> textureSetListToAddTo, ref bool stop)
+        public override void GetImages(GraphicsDevice graphicsDevice, List<IImageSource[]> textureSetListToAddTo, ref bool stop)
         {
             List<string> zipFilesToOpen = new List<string>();
             string debugInfoZipFileName = "";
@@ -53,7 +54,7 @@ namespace Raycasting
 
                 for (int i = 0; i < zipFilesToOpen.Count(); i++)
                 {
-                    List<Texture2D> textures = new List<Texture2D>();
+                    List<IImageSource> textures = new List<IImageSource>();
                     debugInfoZipFileName = zipFilesToOpen[i];
                     using (ZipArchive archive = ZipFile.OpenRead(zipFilesToOpen[i]))
                     {
@@ -76,10 +77,8 @@ namespace Raycasting
                                             fileStream.CopyTo(ms);
                                             ms.Position = 0; // rewind
                                             Texture2D texture = Texture2D.FromStream(graphicsDevice, ms);
-                                            textures.Add(texture);
+                                            textures.Add(new ImageSource(texture));
                                             OnTextureLoaded(texture);
-
-
                                         }
                                     }
                                 }

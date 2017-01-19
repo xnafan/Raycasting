@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework.Audio;
 using System.Threading;
 using System.IO;
 using Microsoft.Xna.Framework.Content;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace Raycasting
 {
@@ -17,7 +19,7 @@ namespace Raycasting
         public static GraphicsDevice CurrentGraphicsDevice;
         Renderer _renderer;
         GraphicsDeviceManager _graphics;
-
+        
         int[,] _maze = new int[31, 31];
         Player _player;
         Random _rnd = new Random();
@@ -33,7 +35,7 @@ namespace Raycasting
             _graphics = new GraphicsDeviceManager(this);
             _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
             _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-            _graphics.IsFullScreen = true;
+            _graphics.IsFullScreen = false;
         }
 
         protected override void LoadContent()
@@ -122,6 +124,7 @@ namespace Raycasting
         base.Update(gameTime);
         GetInput();
         _renderer.Update(gameTime);
+            
     }
 
     private void GetInput()
@@ -146,7 +149,7 @@ namespace Raycasting
         }
         if (kbd.IsKeyDown(Keys.F10) && _oldKeyboardState.IsKeyUp(Keys.F10))
         {
-            NextRenderSliceMethod();
+            _renderer.NextRenderSliceMethod();
         }
         if (kbd.IsKeyDown(Keys.F1) && _oldKeyboardState.IsKeyUp(Keys.F1))
         { _renderer.ShowHelp = !_renderer.ShowHelp; }
@@ -157,14 +160,7 @@ namespace Raycasting
         _oldKeyboardState = kbd;
     }
 
-    private void NextRenderSliceMethod()
-    {
-        if (_renderer.Textures.Count > 0)
-        {
-            _renderer.RenderMethodIndex++;
-            _renderer.RenderMethodIndex %= _renderer._renderSliceMethods.Count;
-        }
-    }
+    
 
     protected override void Draw(GameTime gameTime)
     {
