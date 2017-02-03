@@ -14,5 +14,6 @@ namespace Raycasting
         public int TileHitValue{ get; set; }
         public float PositionOnWall { get; set; }
         public float DistanceToCollision{ get; set; }
+        public float ViewAngleOnWall{ get; set; }
     }
 }

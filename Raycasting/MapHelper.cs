@@ -57,6 +57,7 @@ namespace Raycasting
             int lastXCoordinateToCheck = 0;
             var directionInRadian = MathHelper.ToRadians(directionInDegrees);
             Vector2 directionAsVector = directionInRadian.AngleAsVector();
+            float angleOfCollisionInDegrees = angleOfCollisionInDegrees = Math.Abs(((directionInDegrees + 360) % 180) - 90);
 
             if (directionAsVector.X < 0)
             {
@@ -67,6 +68,7 @@ namespace Raycasting
             {
                 firstXCoordinateToCheck = (int)Math.Ceiling(position.X);
                 lastXCoordinateToCheck = map.GetLength(0)-1;
+                
             }
             int deltaX = Math.Sign(lastXCoordinateToCheck - firstXCoordinateToCheck);
             var line = LineFormula.FromCoordinateAndDirection(position, directionInRadian);
@@ -86,11 +88,12 @@ namespace Raycasting
                     var collisionPoint = new Vector2(x, y.Value);
                     return new CollisionInfo()
                     {
-                    CollisionPoint = collisionPoint,
-                    PositionOnWall = fraction,
-                    TileHit = new Point(realX, (int)y.Value),
-                    TileHitValue = map[realX, (int)y.Value],
-                    DistanceToCollision = Vector2.Distance(position, collisionPoint)
+                        CollisionPoint = collisionPoint,
+                        PositionOnWall = fraction,
+                        TileHit = new Point(realX, (int)y.Value),
+                        TileHitValue = map[realX, (int)y.Value],
+                        DistanceToCollision = Vector2.Distance(position, collisionPoint),
+                        ViewAngleOnWall = angleOfCollisionInDegrees
                     };
                 }
                 if(x == lastXCoordinateToCheck) { done = true; }
@@ -108,7 +111,7 @@ namespace Raycasting
             float directionInRadian = (float) MathHelper.ToRadians(directionInDegrees);
 
             Vector2 directionAsVector = new Vector2((float)Math.Cos(directionInRadian), (float)Math.Sin(directionInRadian));
-
+            float angleOfCollisionInDegrees = angleOfCollisionInDegrees = (directionInDegrees + 360) % 180;
             if (directionAsVector.Y < 0)
             {
                 firstYCoordinateToCheck = (int)Math.Floor(position.Y);
@@ -141,7 +144,8 @@ namespace Raycasting
                         PositionOnWall = fraction,
                         TileHit = new Point((int)x.Value, realY),
                         TileHitValue = map[(int)x.Value, realY],
-                        DistanceToCollision = Vector2.Distance(position, collisionPoint)
+                        DistanceToCollision = Vector2.Distance(position, collisionPoint),
+                        ViewAngleOnWall = angleOfCollisionInDegrees
                     };
                 }
                 if (y == lastYCoordinateToCheck) { done = true; }

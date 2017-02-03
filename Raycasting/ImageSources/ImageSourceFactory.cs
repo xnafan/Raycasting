@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using ImageTools;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -12,14 +13,22 @@ namespace Raycasting.ImageSources
 {
     public static class ImageSourceFactory
     {
+        //public enum ImageAdaptionMethod
+        //{
+        //    Empty, FitToSquare, Scroll
+        //}
         public static IImageSource CreateSourceFromFile(string file)
         {
             if (Path.GetExtension(file) != ".gif")
             {
                 using (FileStream fileStream = new FileStream(file, FileMode.Open))
                 {
-
-                    return new ImageSource(Texture2D.FromStream(Game1.CurrentGraphicsDevice, fileStream));
+                    using (Bitmap img = (Bitmap)Bitmap.FromStream(fileStream))
+                    {
+                        
+                        //return new ImageSource(BitmapToTexture2D((Bitmap)ImageTool.ScalePicture(img, 1024, ImageTool.ScaleMode.SquareFrame, 0, Color.Black)));
+                        return new ImageSource(BitmapToTexture2D((Bitmap)img));
+                    }
                 }
             }
             else
@@ -35,7 +44,12 @@ namespace Raycasting.ImageSources
                 ms.Position = 0; // rewind
                 if (Path.GetExtension(filename) != ".gif")
                 {
-                    return new ImageSource(Texture2D.FromStream(Game1.CurrentGraphicsDevice, ms));
+                    using (Bitmap img = (Bitmap)Bitmap.FromStream(ms))
+                    {
+
+                        //return new ImageSource(BitmapToTexture2D((Bitmap)ImageTool.ScalePicture(img, 1024, ImageTool.ScaleMode.SquareFrame, 0, Color.Black)));
+                        return new ImageSource(BitmapToTexture2D((Bitmap)img));
+                    }
                 }
                 else
                 {

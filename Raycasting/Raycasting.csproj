@@ -30,7 +30,7 @@
     <PublisherName>Jakob Farian Krarup &amp; Carsten Goldbæk Nielsen</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>16</ApplicationRevision>
+    <ApplicationRevision>24</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -91,6 +91,8 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="ImageGetters\ImageGetterFromOnlineZipFiles.cs" />
     <Compile Include="ImageSources\AnimatedImageSource.cs" />
     <Compile Include="CollisionInfo.cs" />
     <Compile Include="Game1.cs" />
@@ -100,6 +102,10 @@
     <Compile Include="ImageSources\IImageSource.cs" />
     <Compile Include="ImageSources\ImageSource.cs" />
     <Compile Include="ImageSources\ImageSourceFactory.cs" />
+    <Compile Include="Input\AutonomousPathfinderMover.cs" />
+    <Compile Include="Input\DirectionData.cs" />
+    <Compile Include="Input\IPlayerMover.cs" />
+    <Compile Include="Input\KeyboardPlayerMover.cs" />
     <Compile Include="LineFormula.cs" />
     <Compile Include="MapHelper.cs" />
     <Compile Include="Player.cs" />
@@ -107,10 +113,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RenderDataForSlice.cs" />
     <Compile Include="Renderer.cs" />
+    <Compile Include="SendToTool.cs" />
     <Compile Include="Sounds.cs" />
     <Compile Include="TextureSprite.cs" />
+    <Compile Include="VectorStuff.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="MonoGame.Framework">
       <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\Windows\MonoGame.Framework.dll</HintPath>
     </Reference>
@@ -141,12 +150,11 @@
     <Content Include="Images_1stBricks.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Images_AnimatedGifs.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include="Images_AnimatedGifs.zip" />
     <Content Include="Images_AnimatedPsychedelicGifs.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Images_Animated_boobs.zip" />
     <None Include="Raycasting_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +168,23 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ImageTools\ImageTools.csproj">
+      <Project>{e0288799-194b-4766-8e9a-710bc0944eb0}</Project>
+      <Name>ImageTools</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="IWshRuntimeLibrary">
+      <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />

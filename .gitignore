@@ -241,4 +241,4 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 *.zip
-/Raycasting/Images/Clean
+Raycasting/Images/

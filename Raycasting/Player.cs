@@ -10,21 +10,27 @@ namespace Raycasting
     public class Player
     {
         public Vector2 Position { get; set; }
-        public float ViewingAngle { get; set; }
+        float _viewingAngle;
+        public float Speed { get; set; } = 0.01f;
+        public float ViewingAngle
+        {
+            get { return _viewingAngle; }
+            set
+            {
+                while (value < 0)
+                {
+                    value += 360;
+                }
+                _viewingAngle = value % 360;
+            }
+        }
+
         public int[,] Map { get; set; }
 
         public Player(int[,] map)
         {
             Map = map;
         }
-
-        internal void MoveBackwards()
-        {
-            var tempStep = ((float)MathHelper.ToRadians(this.ViewingAngle)).AngleAsVector() * .07f;
-            var newPosition = this.Position - tempStep;
-            PerformMoveIfNotBlocked(newPosition);
-        }
-
         private void PerformMoveIfNotBlocked(Vector2 newPosition)
         {
 
@@ -51,26 +57,49 @@ namespace Raycasting
             }
         }
 
-        internal void MoveForward()
+        internal void MoveForward(float amount = 0.01f)
         {
-            var tempStep = ((float)MathHelper.ToRadians(this.ViewingAngle)).AngleAsVector() * .07f;
+            var tempStep = ((float)MathHelper.ToRadians(this.ViewingAngle)).AngleAsVector() * amount;
             var newPosition = this.Position + tempStep;
             PerformMoveIfNotBlocked(newPosition);
         }
+
+        internal void MoveBackwards()
+        {
+            var tempStep = ((float)MathHelper.ToRadians(this.ViewingAngle)).AngleAsVector() * Speed;
+            var newPosition = this.Position - tempStep;
+            PerformMoveIfNotBlocked(newPosition);
+        }
+
+        internal void MoveLeft()
+        {
+            var tempStep = ((float)MathHelper.ToRadians(this.ViewingAngle - 90)).AngleAsVector() * Speed;
+            var newPosition = this.Position + tempStep;
+            PerformMoveIfNotBlocked(newPosition);
+        }
+
+        internal void MoveRight()
+        {
+            var tempStep = ((float)MathHelper.ToRadians(this.ViewingAngle + 90)).AngleAsVector() * Speed;
+            var newPosition = this.Position + tempStep;
+            PerformMoveIfNotBlocked(newPosition);
+        }
+
+
 
         public override string ToString()
         {
             return "[Player] Position: " + this.Position + ", viewangle: " + this.ViewingAngle;
         }
 
-        internal void TurnRight()
+        internal void TurnRight(float amount = 3)
         {
-            this.ViewingAngle += 3f;
+            this.ViewingAngle += amount;
         }
 
-        internal void TurnLeft()
+        internal void TurnLeft(float amount = 3)
         {
-            this.ViewingAngle -= 3f;
+            this.ViewingAngle -= amount;
         }
     }
 
