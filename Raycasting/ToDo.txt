@@ -1,8 +1,2 @@
-﻿ * Wall intersection - DONE!
-    http://www.permadi.com/tutorial/raycast/rayc7.html
-    http://archive.gamedev.net/archive/reference/articles/article872.html
-    http://www.playfuljs.com/a-first-person-engine-in-265-lines/
-
- * Change rendering, so it is one pixel strips - fast bredde giver bedre granulering - DONE!
- 
- * respect maxDistance in collisionfinding functions
+﻿  * respect maxDistance in collisionfinding functions
+  * add support for ZIP files within folders

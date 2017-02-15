@@ -18,7 +18,6 @@ namespace Raycasting.ImageSources
         Bitmap _currentBitMap;
         private float _msSpentInCurrentFrame;
         public string VideoPath { get; set; }
-        private int _currentFrame;
         public VideoImageSource(string videoPath)
         {
             _reader = new VideoFileReader();

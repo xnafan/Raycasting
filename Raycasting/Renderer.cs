@@ -47,7 +47,8 @@ namespace Raycasting
         public Renderer(int width, int height, Player player, int[,] maze)
         {
             _renderSliceMethods.Add(RenderSliceWithDistanceBasedLighting);
-            _renderSliceMethods.Add(RenderSliceForSlideShow);
+            _renderSliceMethods.Add(RenderSliceForIndividualSlideShow);
+            _renderSliceMethods.Add(RenderSliceForSynchronizedSlideShow);
             _renderSliceMethods.Add(RenderSliceWithGlide);
             _renderSliceMethods.Add(RenderSlice);
 
@@ -124,7 +125,7 @@ namespace Raycasting
                 var destinationHeight = ViewingField.Height / adjustedDistanceToCollision;
 
                 float percentageOfWidth = pixel / _widthOfViewingArcInDegrees;
-                var destinationRectangle = new Rectangle(pixel, (int)((ViewingField.Height - destinationHeight) / 2),
+                var destinationRectangle = new Rectangle(pixel, (int)(Math.Floor((ViewingField.Height - destinationHeight) / 2)),
                     1, (int)destinationHeight);
 
                 CompleteRenderData[pixel] = new RenderDataForSlice() { CollisionInfo = collisionPosition.Value, DestinationRectangle = destinationRectangle };
@@ -317,12 +318,27 @@ namespace Raycasting
             }
         }
 
-        private void RenderSliceForSlideShow(RenderDataForSlice renderData)
+        private void RenderSliceForIndividualSlideShow(RenderDataForSlice renderData)
         {
             int textureIndex1 = renderData.CollisionInfo.Value.TileHitValue - 1 + _slideIndex;
             textureIndex1 %= CurrentTextureSet.Length;
 
             int textureIndex2 = (textureIndex1 + 1) % CurrentTextureSet.Length;
+            RenderSliceForSlideShow(renderData, textureIndex1, textureIndex2);
+        }
+
+
+        private void RenderSliceForSynchronizedSlideShow(RenderDataForSlice renderData)
+        {
+            int textureIndex1 = _slideIndex;
+            textureIndex1 %= CurrentTextureSet.Length;
+
+            int textureIndex2 = (textureIndex1 + 1) % CurrentTextureSet.Length;
+            RenderSliceForSlideShow(renderData, textureIndex1, textureIndex2);
+        }
+
+        private void RenderSliceForSlideShow(RenderDataForSlice renderData, int textureIndex1, int textureIndex2)
+        {
             int _pixelsPerDegreeOfViewingAngleFromSourceBitmap1 = CurrentTextureSet[textureIndex1].CurrentTexture.Width / _widthOfViewingArcInDegrees;
 
             int _pixelsPerDegreeOfViewingAngleFromSourceBitmap2 = CurrentTextureSet[textureIndex2].CurrentTexture.Width / _widthOfViewingArcInDegrees;
@@ -336,6 +352,7 @@ namespace Raycasting
             Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1].CurrentTexture, renderData.DestinationRectangle, sourceRectangle1, Color.White);
             Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex2].CurrentTexture, renderData.DestinationRectangle, sourceRectangle2, Color.White * (1 - transparency));
         }
+
 
         private void DrawHelp(GameTime gameTime)
         {

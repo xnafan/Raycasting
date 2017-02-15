@@ -44,7 +44,7 @@ namespace Raycasting
             _graphics = new GraphicsDeviceManager(this);
             _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
             _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-            _graphics.IsFullScreen = false;
+            _graphics.IsFullScreen = true;
         }
 
         protected override void LoadContent()
@@ -113,9 +113,9 @@ namespace Raycasting
                         imageGetter.TextureLoadedEvent += (obj, e) => _renderer.AddTexture(e.Texture);
                         imageGetter.GetImages(GraphicsDevice, _renderer.Textures, ref _exiting);
 
-                        //imageGetter = new ImageGetterFromZipFiles(parameter);
-                        //imageGetter.TextureLoadedEvent += (obj, e) => _renderer.AddTexture(e.Texture);
-                        //imageGetter.GetImages(GraphicsDevice, _renderer.Textures, ref _exiting);
+                        imageGetter = new ImageGetterFromZipFiles(parameter);
+                        imageGetter.TextureLoadedEvent += (obj, e) => _renderer.AddTexture(e.Texture);
+                        imageGetter.GetImages(GraphicsDevice, _renderer.Textures, ref _exiting);
                     }).Start();
                 }
             }
