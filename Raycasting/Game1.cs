@@ -11,6 +11,7 @@ using System.Drawing.Imaging;
 using System.Linq;
 using Raycasting.Input;
 using System.Reflection;
+using Raycasting.ImageGetters;
 
 namespace Raycasting
 {
@@ -43,7 +44,7 @@ namespace Raycasting
             _graphics = new GraphicsDeviceManager(this);
             _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
             _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-            _graphics.IsFullScreen = true;
+            _graphics.IsFullScreen = false;
         }
 
         protected override void LoadContent()
@@ -91,6 +92,7 @@ namespace Raycasting
                 parameter = Environment.GetCommandLineArgs()[1];
                 parameter = parameter.Replace("\"", "");
             }
+
             if (parameter == null || Directory.Exists(parameter) || ((File.Exists(parameter) && Path.GetExtension(parameter) != ".zip")))
             {
                 Console.WriteLine("Starting from folder or file");
@@ -107,25 +109,24 @@ namespace Raycasting
                 {
                     new Thread(() =>
                     {
-                        IImageGetter imageGetter =
-                        new ImageGetterFromFolder(parameter);
+                        ITextureGetter imageGetter = new ImageGetterFromFolderOrSingleNonZipFile(parameter);
                         imageGetter.TextureLoadedEvent += (obj, e) => _renderer.AddTexture(e.Texture);
                         imageGetter.GetImages(GraphicsDevice, _renderer.Textures, ref _exiting);
 
-                        imageGetter = new ImageGetterFromZipFiles(parameter);
-                        imageGetter.TextureLoadedEvent += (obj, e) => _renderer.AddTexture(e.Texture);
-                        imageGetter.GetImages(GraphicsDevice, _renderer.Textures, ref _exiting);
+                        //imageGetter = new ImageGetterFromZipFiles(parameter);
+                        //imageGetter.TextureLoadedEvent += (obj, e) => _renderer.AddTexture(e.Texture);
+                        //imageGetter.GetImages(GraphicsDevice, _renderer.Textures, ref _exiting);
                     }).Start();
                 }
             }
             else if (parameter.Trim().Substring(0, 4).ToLower().Equals("http"))
             {
                 new Thread(() =>
-          {
-              var imageGetter = new ImageGetterFromOnlineZipFiles(parameter);
-              imageGetter.TextureLoadedEvent += (obj, e) => _renderer.AddTexture(e.Texture);
-              imageGetter.GetImages(GraphicsDevice, _renderer.Textures, ref _exiting);
-          }).Start();
+                {
+                    var imageGetter = new ImageGetterFromOnlineZipFiles(parameter);
+                    imageGetter.TextureLoadedEvent += (obj, e) => _renderer.AddTexture(e.Texture);
+                    imageGetter.GetImages(GraphicsDevice, _renderer.Textures, ref _exiting);
+                }).Start();
             }
             else if (Path.GetExtension(parameter) == ".zip")
             {
@@ -144,6 +145,9 @@ namespace Raycasting
             }
         }
 
+        private static void StartFromFile(string file)
+        { }
+
         private string GetUrlFromLinkFile(string parameter)
         {
             var lines = File.ReadAllLines(parameter);
@@ -160,17 +164,17 @@ namespace Raycasting
             {
                 for (int y = 0; y <= _maze.GetUpperBound(1); y++)
                 {
-                    if (y == 0 || x == 0 || y == _maze.GetUpperBound(1) || x == _maze.GetUpperBound(0) || _rnd.NextDouble() < fillPercentage )
+                    if (y == 0 || x == 0 || y == _maze.GetUpperBound(1) || x == _maze.GetUpperBound(0) || _rnd.NextDouble() < fillPercentage)
                     {
                         _maze[x, y] = 1 + _rnd.Next(maxLength);
                     }
                 }
             }
-            
+
             int tilesToFill = tilesInAll / 3;
             for (int i = 0; i < tilesToFill; i++)
             {
-             
+
             }
         }
         #endregion

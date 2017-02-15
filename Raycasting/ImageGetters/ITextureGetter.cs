@@ -5,7 +5,7 @@ using Raycasting.ImageSources;
 
 namespace Raycasting
 {
-    public interface IImageGetter
+    public interface ITextureGetter
     {
         
         void GetImages(GraphicsDevice graphicsDevice, List<IImageSource[]> textureSetListToAddTo, ref bool stop);
@@ -20,7 +20,7 @@ namespace Raycasting
         public TextureEventArgs(Texture2D texture) { Texture = texture; }
         public Texture2D Texture{ get; private set; } // readonly
     }
-    public abstract class BaseImageGetter : IImageGetter
+    public abstract class BaseImageGetter : ITextureGetter
     {
         public event TextureEventHandler TextureLoadedEvent;
 

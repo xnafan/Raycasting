@@ -13,19 +13,25 @@ namespace Raycasting.ImageSources
 {
     public static class ImageSourceFactory
     {
-        //public enum ImageAdaptionMethod
-        //{
-        //    Empty, FitToSquare, Scroll
-        //}
         public static IImageSource CreateSourceFromFile(string file)
         {
-            if (Path.GetExtension(file) != ".gif")
+            var extension = Path.GetExtension(file).ToLower();
+            if(IsValidVideoFile(extension))
+            {
+                return new VideoImageSource(file);
+
+            }
+            else if (extension == ".gif")
+            {
+                return CreateImageSourceFromGif(file);
+            }
+            else if(IsValidImageFile(file))
             {
                 using (FileStream fileStream = new FileStream(file, FileMode.Open))
                 {
                     using (Bitmap img = (Bitmap)Bitmap.FromStream(fileStream))
                     {
-                        
+                            
                         //return new ImageSource(BitmapToTexture2D((Bitmap)ImageTool.ScalePicture(img, 1024, ImageTool.ScaleMode.SquareFrame, 0, Color.Black)));
                         return new ImageSource(BitmapToTexture2D((Bitmap)img));
                     }
@@ -33,8 +39,9 @@ namespace Raycasting.ImageSources
             }
             else
             {
-                return CreateImageSourceFromGif(file);
+                throw new ArgumentException("Not a valid file for getting images");
             }
+            
         }
         public static IImageSource CreateSourceFromStream(Stream stream, string filename)
         {
@@ -109,7 +116,7 @@ namespace Raycasting.ImageSources
         }
 
 
-        static Texture2D BitmapToTexture2D(Bitmap image)
+        public static Texture2D BitmapToTexture2D(Bitmap image)
         {
             // Buffer size is size of color array multiplied by 4 because   
             // each pixel has four color bytes  
@@ -126,6 +133,24 @@ namespace Raycasting.ImageSources
               Game1.CurrentGraphicsDevice, memoryStream);
 
             return texture;
+        }
+
+        public static bool IsValidVideoFile(string file)
+        {
+            var extension = Path.GetExtension(file);
+            return ".avi.mkv.mp4.wmv.webm".Contains(extension.ToLower());
+        }
+
+        public static bool IsValidImageFile(string file)
+        {
+            var extension = Path.GetExtension(file);
+            return ".jpg.png.bmp.gif".Contains(extension.ToLower());
+        }
+
+
+        public static bool IsValidImageSourceFile(string file)
+        {
+            return IsValidVideoFile(file) || IsValidImageFile(file);
         }
     }
 }

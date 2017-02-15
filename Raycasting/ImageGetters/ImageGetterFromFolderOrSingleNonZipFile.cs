@@ -11,13 +11,13 @@ using Raycasting.ImageSources;
 
 namespace Raycasting
 {
-    public class ImageGetterFromFolder : BaseImageGetter
+    public class ImageGetterFromFolderOrSingleNonZipFile : BaseImageGetter
     {
 
         public const string AppSettingsKey = "ImageFolderPath";
         private string _imageSource;
 
-        public ImageGetterFromFolder(string rootImageFolder = null)
+        public ImageGetterFromFolderOrSingleNonZipFile(string rootImageFolder = null)
         {
             _imageSource = rootImageFolder;
         }
@@ -42,7 +42,7 @@ namespace Raycasting
                 }
                 else
                 {
-                    List<IImageSource> textures = new List<ImageSources.IImageSource>();
+                    List<IImageSource> textures = new List<IImageSource>();
                     AddFile(textures, _imageSource);
                     textureSetListToAddTo.Add(textures.ToArray());
                     return;
@@ -51,9 +51,7 @@ namespace Raycasting
                 for (int i = 0; i < imageFolders.Count; i++)
                 {
                     List<IImageSource> textures = new List<IImageSource>();
-                    var files = Directory.GetFiles(imageFolders[i], "*.jpg").ToList();
-                    files.AddRange(Directory.GetFiles(imageFolders[i], "*.png"));
-                    files.AddRange(Directory.GetFiles(imageFolders[i], "*.gif"));
+                    var files = Directory.GetFiles(imageFolders[i]).ToList();
 
                     foreach (var item in files)
                     {
@@ -61,7 +59,8 @@ namespace Raycasting
                         if (stop) return;
                         try
                         {
-                            AddFile(textures, item);
+                            if (ImageSourceFactory.IsValidImageSourceFile(item)){ AddFile(textures, item); }
+                            
                         }
                         catch (Exception ex)
                         {

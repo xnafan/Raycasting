@@ -42,11 +42,6 @@ namespace Raycasting.ImageSources
             _currentTextureIndex %= Textures.Count;
             _msSpentInCurrentFrame = 0;
         }
-
-       
-
-      
-
         public static implicit operator Texture2D(AnimatedImageSource source)
         {
             return source.CurrentTexture;

@@ -63,7 +63,7 @@ namespace Raycasting
             Player = player;
             degreePerPixel = _widthOfViewingArcInDegrees / (float)ViewingField.Width;
             CompleteRenderData = new RenderDataForSlice[ViewingField.Width];
-
+            
             PrecalculateFisheyeCompensations();
         }
 
@@ -97,6 +97,11 @@ namespace Raycasting
             }
             CalculateRenderData();
             AnimatedGifs.ForEach(gif => gif.Update(gameTime));
+            if(CurrentTextureSet != null)
+            foreach (var imageSource in this.CurrentTextureSet)
+            {
+                (imageSource as VideoImageSource)?.Update();
+            }
         }
 
         private void CalculateRenderData()
@@ -132,7 +137,6 @@ namespace Raycasting
             //Game1.SpriteBatch.Begin();
             //DrawFloor(gameTime);
             //Game1.SpriteBatch.End();
-
             var renderSliceMethod = GetCurrentSliceRenderMethod();
             if (PsychedelicMode) { RenderAllToTarget(gameTime, renderSliceMethod); }
             else { RenderAll(gameTime, renderSliceMethod); }
@@ -203,7 +207,9 @@ namespace Raycasting
             for (int pixel = 0; pixel < ViewingField.Width; pixel++)
             {
                 if (CompleteRenderData[pixel] != null)
+                {
                     renderMethod(CompleteRenderData[pixel]);
+                }
             }
             Game1.SpriteBatch.End();
         }
