@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Raycasting.MapMakers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,30 +26,32 @@ namespace Raycasting
             }
         }
 
-        public int[,] Map { get; set; }
+        public IMap Map { get; set; }
 
-        public Player(int[,] map)
+        public Player(IMap map)
         {
             Map = map;
+            Position = map.PlayerStartingPoint;
+            ViewingAngle = map.PlayersInitialViewingDirection;
         }
         private void PerformMoveIfNotBlocked(Vector2 newPosition)
         {
 
-            if (!Map.IsBlocked(newPosition))
+            if (!Map.Tiles.IsBlocked(newPosition))
             {
                 this.Position = newPosition;
             }
             else
             {
                 var positionHorizontal = new Vector2(newPosition.X, this.Position.Y);
-                if (!Map.IsBlocked(positionHorizontal))
+                if (!Map.Tiles.IsBlocked(positionHorizontal))
                 {
                     this.Position = positionHorizontal;
                 }
                 else
                 {
                     var positionVertical = new Vector2(this.Position.X, newPosition.Y);
-                    if (!Map.IsBlocked(positionVertical))
+                    if (!Map.Tiles.IsBlocked(positionVertical))
                     {
                         this.Position = positionVertical;
                     }

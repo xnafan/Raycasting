@@ -25,6 +25,7 @@ namespace Raycasting
             List<IImageSource> textures = new List<IImageSource>();
 
             WebRequest request = System.Net.HttpWebRequest.Create(_urlToOpen);
+            WebRequest.DefaultWebProxy.Credentials = CredentialCache.DefaultNetworkCredentials;
             var response = (HttpWebResponse)request.GetResponse();
             using (ZipArchive archive = new ZipArchive(response.GetResponseStream()))
             {

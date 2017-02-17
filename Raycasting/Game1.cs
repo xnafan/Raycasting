@@ -12,6 +12,7 @@ using System.Linq;
 using Raycasting.Input;
 using System.Reflection;
 using Raycasting.ImageGetters;
+using Raycasting.MapMakers;
 
 namespace Raycasting
 {
@@ -26,7 +27,7 @@ namespace Raycasting
         Renderer _renderer;
         GraphicsDeviceManager _graphics;
 
-        int[,] _maze = new int[31, 31];
+        IMap _maze;
         Player _player;
         Random _rnd = new Random();
         KeyboardState _currentKeyboardState, _oldKeyboardState;
@@ -44,43 +45,25 @@ namespace Raycasting
             _graphics = new GraphicsDeviceManager(this);
             _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
             _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-            _graphics.IsFullScreen = true;
+            _graphics.IsFullScreen = false;
         }
 
         protected override void LoadContent()
         {
             CurrentGraphicsDevice = GraphicsDevice;
             Game1.SpriteBatch = new SpriteBatch(GraphicsDevice);
-            CreateMaze();
-            _player = new Player(_maze);
-            _player.Position = new Vector2(2.5f, 3.5f);
-            _maze[(int)_player.Position.X, (int)_player.Position.Y] = 0;
-            _maze[(int)_player.Position.X + 1, (int)_player.Position.Y] = 0;
-            _maze[(int)_player.Position.X, (int)_player.Position.Y + 1] = 0;
-            _maze[(int)_player.Position.X + 1, (int)_player.Position.Y + 1] = 0;
-
-            //_maze[(int)_player.Position.X -1, (int)_player.Position.Y-1] = 1;
-            //_maze[(int)_player.Position.X -1, (int)_player.Position.Y ] = 1;
-            //_maze[(int)_player.Position.X -1, (int)_player.Position.Y + 1] = 1;
-            //_maze[(int)_player.Position.X - 1, (int)_player.Position.Y +2] = 1;
-
-            //_maze[(int)_player.Position.X +2, (int)_player.Position.Y - 1] = 1;
-            //_maze[(int)_player.Position.X +2, (int)_player.Position.Y] = 1;
-            //_maze[(int)_player.Position.X +2, (int)_player.Position.Y + 1] = 1;
-            //_maze[(int)_player.Position.X + 2, (int)_player.Position.Y + 2] = 1;
-
-            //_maze[(int)_player.Position.X , (int)_player.Position.Y - 1] = 1;
-            //_maze[(int)_player.Position.X + 1, (int)_player.Position.Y -1] = 1;
-
-            //_maze[(int)_player.Position.X, (int)_player.Position.Y + 2] = 1;
-            //_maze[(int)_player.Position.X + 1, (int)_player.Position.Y + 2] = 1;
-
-
-            _player.ViewingAngle = 0;
-            _playerMover = new AutonomousPathfinderMover(_player);
+            SetupMazeAndPlayer();
             Sounds.Instance.Bump = Content.Load<SoundEffect>("Bump");
-            _renderer = new Renderer(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height, _player, _maze);
             GetTextures();
+        }
+
+        private void SetupMazeAndPlayer()
+        {
+            _maze = new RandomMapMaker().CreateMaze(31, 31);
+            //_maze = new SymmetricMapMaker().CreateMaze(13, 13);
+            _player = new Player(_maze);
+            _playerMover = new AutonomousPathfinderMover(_player);
+            _renderer = new Renderer(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height, _player, _maze.Tiles);
         }
 
         private void GetTextures()
@@ -154,29 +137,6 @@ namespace Raycasting
             var urlLine = lines.ToList().First(line => line.Substring(0, 4) == "URL=");
             return urlLine.Substring(4);
         }
-
-        private void CreateMaze()
-        {
-            int maxLength = 100;
-            var tilesInAll = _maze.GetLength(0) * _maze.GetLength(1);
-            float fillPercentage = .3f;
-            for (int x = 0; x <= _maze.GetUpperBound(0); x++)
-            {
-                for (int y = 0; y <= _maze.GetUpperBound(1); y++)
-                {
-                    if (y == 0 || x == 0 || y == _maze.GetUpperBound(1) || x == _maze.GetUpperBound(0) || _rnd.NextDouble() < fillPercentage)
-                    {
-                        _maze[x, y] = 1 + _rnd.Next(maxLength);
-                    }
-                }
-            }
-
-            int tilesToFill = tilesInAll / 3;
-            for (int i = 0; i < tilesToFill; i++)
-            {
-
-            }
-        }
         #endregion
 
         protected override void Update(GameTime gameTime)
@@ -191,13 +151,19 @@ namespace Raycasting
         {
             _currentKeyboardState = Keyboard.GetState();
             if (_currentKeyboardState.IsKeyDown(Keys.Escape)) { _exiting = true; this.Exit(); }
+            if (_currentKeyboardState.IsKeyDown(Keys.N) && _oldKeyboardState.IsKeyUp(Keys.N))
+                {
+                SetupMazeAndPlayer();
+            }
 
-
-            if (_currentKeyboardState.IsKeyDown(Keys.NumLock) && _oldKeyboardState.IsKeyUp(Keys.NumLock) && _renderer.Textures.Count > 0)
+            if (_currentKeyboardState.IsKeyDown(Keys.PageUp) && _oldKeyboardState.IsKeyUp(Keys.PageUp) && _renderer.Textures.Count > 0)
             {
-                if (_currentKeyboardState.IsKeyDown(Keys.LeftShift) || _currentKeyboardState.IsKeyDown(Keys.RightShift))
-                { _renderer.PreviousTextureSet(); }
-                else { _renderer.NextTextureSet(); }
+                _renderer.NextTextureSet(); 
+            }
+
+            if (_currentKeyboardState.IsKeyDown(Keys.PageDown) && _oldKeyboardState.IsKeyUp(Keys.PageDown) && _renderer.Textures.Count > 0)
+            {
+                _renderer.PreviousTextureSet();
             }
 
             if (_currentKeyboardState.IsKeyDown(Keys.P) && _oldKeyboardState.IsKeyUp(Keys.P))

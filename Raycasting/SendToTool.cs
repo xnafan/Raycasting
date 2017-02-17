@@ -1,9 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using IWshRuntimeLibrary;
 
 namespace Raycasting
@@ -21,9 +16,9 @@ namespace Raycasting
                 IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(shortcutLocation);
 
                 shortcut.Description = shortcutDescription;   // The description of the shortcut
-                shortcut.IconLocation = targetFileLocation;           // The icon of the shortcut
-                shortcut.TargetPath = targetFileLocation;                 // The path of the file that will launch when the shortcut is run
-                shortcut.Save();                                    // Save the shortcut
+                shortcut.IconLocation = targetFileLocation;   // The icon of the shortcut
+                shortcut.TargetPath = targetFileLocation;     // The path of the file that will launch when the shortcut is run
+                shortcut.Save();                              // Save the shortcut
             }
         }
     }

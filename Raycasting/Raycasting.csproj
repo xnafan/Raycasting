@@ -33,7 +33,7 @@
     <PublisherName>Jakob Farian Krarup &amp; Carsten Goldbæk Nielsen</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>24</ApplicationRevision>
+    <ApplicationRevision>25</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -113,6 +113,11 @@
     <Compile Include="Input\KeyboardPlayerMover.cs" />
     <Compile Include="LineFormula.cs" />
     <Compile Include="MapHelper.cs" />
+    <Compile Include="MapMakers\BaseMap.cs" />
+    <Compile Include="MapMakers\IMap.cs" />
+    <Compile Include="MapMakers\RandomMapMaker.cs" />
+    <Compile Include="MapMakers\IMapMaker.cs" />
+    <Compile Include="MapMakers\SymmetricMapMaker.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

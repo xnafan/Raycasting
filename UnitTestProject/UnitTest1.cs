@@ -2,13 +2,16 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Raycasting;
 using Microsoft.Xna.Framework;
+using Raycasting.MapMakers;
 
 namespace UnitTestProject
 {
     [TestClass]
     public class UnitTest1
     {
-        int[,] map = new int[3, 3] { { 1, 1, 1 }, { 1, 0, 1 }, { 1, 1, 1 } };
+        IMap _map = new BaseMap() { Tiles = new int[3, 3] { { 1, 1, 1 }, { 1, 0, 1 }, { 1, 1, 1 } } };
+    
+        
         
         //TODO: Test for null returns on erroneous slopes (horizontal/vertical)
 
@@ -16,25 +19,25 @@ namespace UnitTestProject
         public void TestWholeGridCollisionFinderVertically()
         {
             //Arrange
-            Player player = new Raycasting.Player(map);
+            Player player = new Raycasting.Player(_map);
             player.Position = new Vector2(1.5f, 1.5f);
             player.ViewingAngle = 45;
             
             //Act
-            var collisionPoint = map.GetVerticalCollision(player.Position,MathHelper.ToRadians( player.ViewingAngle), 10);
+            var collisionPoint = _map.Tiles.GetVerticalCollision(player.Position,MathHelper.ToRadians( player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(Vector2.One * 2, collisionPoint.Value, "The two values are not the same");
 
             //Act
             player.ViewingAngle = 0;
-            collisionPoint = map.GetVerticalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
+            collisionPoint = _map.Tiles.GetVerticalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(new Vector2(2,player.Position.Y), collisionPoint.Value, "The two values are not the same");
 
             //Act
             player.Position = Vector2.One * 1.25f;
             player.ViewingAngle = 180;
-            collisionPoint = map.GetVerticalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
+            collisionPoint = _map.Tiles.GetVerticalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(new Vector2(1,1.25f), collisionPoint.Value, "The two values are not the same");
         }
@@ -43,25 +46,25 @@ namespace UnitTestProject
         public void TestWholeGridCollisionFinderHorizontally()
         {
             //Arrange
-            Player player = new Raycasting.Player(map);
+            Player player = new Raycasting.Player(_map);
             player.Position = new Vector2(1.5f, 1.5f);
             player.ViewingAngle = 45;
 
             //Act
-            var collisionPoint = map.GetHorizontalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
+            var collisionPoint = _map.Tiles.GetHorizontalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(new Vector2(2,1), collisionPoint.Value, "The two values are not the same");
 
             //Act
             player.ViewingAngle = 90;
-            collisionPoint = map.GetHorizontalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
+            collisionPoint = _map.Tiles.GetHorizontalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             Assert.AreEqual(new Vector2(1.5f, 1), collisionPoint.Value, "The two values are not the same");
 
             //Act
             player.Position = Vector2.One * 1.25f;
             player.ViewingAngle = 315;
-            collisionPoint = map.GetHorizontalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
+            collisionPoint = _map.Tiles.GetHorizontalCollision(player.Position, MathHelper.ToRadians(player.ViewingAngle), 10);
             //Assert
             //Assert.IsTrue(Vector2.Distance(collisionPoint.Value, new Vector2(2, 2)) < .0001, "The two values are not the same");
         }

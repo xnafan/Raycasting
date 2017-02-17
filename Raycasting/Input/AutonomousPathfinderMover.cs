@@ -105,16 +105,16 @@ namespace Raycasting.Input
         {
             List<DirectionData> directions = new List<Input.DirectionData>();
             var currentTile = new Point((int)player.Position.X, (int)player.Position.Y);
-            if (player.Map[currentTile.X-1, currentTile.Y] == 0) { directions.Add(DirectionData.Left); }
-            if (player.Map[currentTile.X + 1, currentTile.Y] == 0) { directions.Add(DirectionData.Right); }
-            if (player.Map[currentTile.X, currentTile.Y -1] == 0) { directions.Add(DirectionData.Up); }
-            if (player.Map[currentTile.X , currentTile.Y +1] == 0) { directions.Add(DirectionData.Down); }
+            if (player.Map.Tiles[currentTile.X-1, currentTile.Y] == 0) { directions.Add(DirectionData.Left); }
+            if (player.Map.Tiles[currentTile.X + 1, currentTile.Y] == 0) { directions.Add(DirectionData.Right); }
+            if (player.Map.Tiles[currentTile.X, currentTile.Y -1] == 0) { directions.Add(DirectionData.Up); }
+            if (player.Map.Tiles[currentTile.X , currentTile.Y +1] == 0) { directions.Add(DirectionData.Down); }
             return directions.GetRandomElement();
         }
            private void GetNextTarget(Player player)
         {
-            var nextTargetToUse = MoveCandidateForwardUntilBlocked(_lastTargetReached, player.Map);
-            _nextTarget = AddBestTurnDirection(nextTargetToUse, player.Map);
+            var nextTargetToUse = MoveCandidateForwardUntilBlocked(_lastTargetReached, player.Map.Tiles);
+            _nextTarget = AddBestTurnDirection(nextTargetToUse, player.Map.Tiles);
         }
 
 

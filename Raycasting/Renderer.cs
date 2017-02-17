@@ -382,7 +382,7 @@ namespace Raycasting
             top += interval;
             Game1.SpriteBatch.DrawString(_font, "[F11] to toggle fullscreen", top, Color.White);
             top += interval;
-            Game1.SpriteBatch.DrawString(_font, "[NUMLOCK] to switch textures", top, Color.White);
+            Game1.SpriteBatch.DrawString(_font, "[PgUp/PgDn] to switch textures", top, Color.White);
             top += interval;
             Game1.SpriteBatch.DrawString(_font, "[P] to toggle psychedelic mode", top, Color.White);
         }
@@ -391,11 +391,11 @@ namespace Raycasting
         {
             int size = 10;
             int yOffset = 20;
-            for (int x = 0; x < Player.Map.GetLength(0); x++)
+            for (int x = 0; x < Player.Map.Tiles.GetLength(0); x++)
             {
-                for (int y = 0; y < Player.Map.GetLength(1); y++)
+                for (int y = 0; y < Player.Map.Tiles.GetLength(1); y++)
                 {
-                    Game1.SpriteBatch.Draw(_white, new Rectangle(x * size, y * size + yOffset, size, size), Player.Map[x, y] != 0 ? Color.White * .6f : Color.Transparent);
+                    Game1.SpriteBatch.Draw(_white, new Rectangle(x * size, y * size + yOffset, size, size), Player.Map.Tiles[x, y] != 0 ? Color.White * .6f : Color.Transparent);
                 }
             }
             Game1.SpriteBatch.Draw(_white, new Rectangle((int)(Player.Position.X * size - size / 2), (int)(Player.Position.Y * size + yOffset - size / 2), size, size), Color.Red);
