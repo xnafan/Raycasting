@@ -29,7 +29,7 @@ namespace Raycasting
         int _halfWidthOfViewingFieldInPixels;
         int _widthOfViewingArcInDegrees = 60;
         SpriteFont _font;
-        int[,] _maze;
+        public int[,] Tiles { set; get; }
         private RenderDataForSlice[] CompleteRenderData;
         float[] fisheyeCompensations;
         float degreePerPixel;
@@ -60,7 +60,7 @@ namespace Raycasting
             _font = Game1.ContentManager.Load<SpriteFont>("DefaultFont");
             _target1 = new RenderTarget2D(Game1.CurrentGraphicsDevice, Game1.CurrentGraphicsDevice.PresentationParameters.BackBufferWidth, Game1.CurrentGraphicsDevice.PresentationParameters.BackBufferHeight);
             _target2 = new RenderTarget2D(Game1.CurrentGraphicsDevice, Game1.CurrentGraphicsDevice.PresentationParameters.BackBufferWidth, Game1.CurrentGraphicsDevice.PresentationParameters.BackBufferHeight);
-            _maze = maze;
+            Tiles = maze;
             Player = player;
             degreePerPixel = _widthOfViewingArcInDegrees / (float)ViewingField.Width;
             CompleteRenderData = new RenderDataForSlice[ViewingField.Width];
@@ -114,7 +114,7 @@ namespace Raycasting
             {
                 var realAngle = absoluteAngleOfLeftMostPeripheralVision + degreePerPixel * pixel;
                 var angleFromCenter = Math.Abs(Player.ViewingAngle - realAngle);
-                CollisionInfo? collisionPosition = _maze.GetCollisionPointImproved(Player.Position, realAngle, 100);
+                CollisionInfo? collisionPosition = Tiles.GetCollisionPointImproved(Player.Position, realAngle, 100);
 
                 if (!collisionPosition.HasValue)
                 {
@@ -358,7 +358,7 @@ namespace Raycasting
         {
 
 
-            Vector2 top = Vector2.UnitY * (ViewingField.Height - 80);
+            Vector2 top = Vector2.UnitY * (ViewingField.Height - 100);
             Vector2 interval = Vector2.UnitY * 20;
             var textureText = "loading first imageset";
             if (Textures.Count > 0)
@@ -385,6 +385,8 @@ namespace Raycasting
             Game1.SpriteBatch.DrawString(_font, "[PgUp/PgDn] to switch textures", top, Color.White);
             top += interval;
             Game1.SpriteBatch.DrawString(_font, "[P] to toggle psychedelic mode", top, Color.White);
+            top += interval;
+            Game1.SpriteBatch.DrawString(_font, "[N] for new map", top, Color.White);
         }
 
         public void DrawMap()

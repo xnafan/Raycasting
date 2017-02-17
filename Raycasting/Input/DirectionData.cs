@@ -43,10 +43,8 @@ namespace Raycasting.Input
 
         public static DirectionData DegreesToDirectionData(int angle)
         {
-            while (angle < 0)
-            {
-                angle += 360;
-            }
+            while (angle < 0){angle += 360;}
+            while (angle > 360){angle -= 360;}
             if ((angle >= 315 && angle <= 360) || (angle >= 0 && angle <= 45)) { return Right; }
             if (angle > 45 && angle <= 135) { return Up; }
             if (angle > 135 && angle <= 225) { return Left; }

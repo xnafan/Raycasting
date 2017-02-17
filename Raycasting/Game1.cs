@@ -59,11 +59,24 @@ namespace Raycasting
 
         private void SetupMazeAndPlayer()
         {
-            _maze = new RandomMapMaker().CreateMaze(31, 31);
-            //_maze = new SymmetricMapMaker().CreateMaze(13, 13);
-            _player = new Player(_maze);
-            _playerMover = new AutonomousPathfinderMover(_player);
-            _renderer = new Renderer(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height, _player, _maze.Tiles);
+            int dieRoll = _rnd.Next(3);
+            switch (dieRoll)
+            {
+                case 0 : _maze = new MazeMapMaker().CreateMaze(31, 31); break;
+                case 1: _maze = new RandomMapMaker().CreateMaze(31, 31); break;
+                case 2: _maze = new SymmetricMapMaker().CreateMaze(13, 13); ; break;
+            }
+            _player = new Player(_maze);_playerMover = new AutonomousPathfinderMover(_player);
+            if (_renderer == null)
+            {
+                _renderer = new Renderer(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height, _player, _maze.Tiles);
+            }
+            else
+            {
+                _renderer.Tiles = _maze.Tiles;
+                _renderer.Player = _player;
+            }
+            
         }
 
         private void GetTextures()

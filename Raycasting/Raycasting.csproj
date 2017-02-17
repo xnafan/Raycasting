@@ -115,6 +115,8 @@
     <Compile Include="MapHelper.cs" />
     <Compile Include="MapMakers\BaseMap.cs" />
     <Compile Include="MapMakers\IMap.cs" />
+    <Compile Include="MapMakers\MazeCreator.cs" />
+    <Compile Include="MapMakers\MazeMapMaker.cs" />
     <Compile Include="MapMakers\RandomMapMaker.cs" />
     <Compile Include="MapMakers\IMapMaker.cs" />
     <Compile Include="MapMakers\SymmetricMapMaker.cs" />

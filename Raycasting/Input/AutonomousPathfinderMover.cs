@@ -27,7 +27,7 @@ namespace Raycasting.Input
             TeleportPlayerToCenterOfCurrentTile(player);
             _lastTargetReached = new Input.AutonomousPathfinderMover.PathFinderInfo()
             {
-                Direction = DirectionData.Right,
+                Direction = DirectionData.DegreesToDirectionData((int)player.ViewingAngle),
                 Target = player.Position
             };
            GetNextTarget(player);

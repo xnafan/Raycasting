@@ -14,10 +14,7 @@ namespace Raycasting.MapMakers
         {
             var tiles = new int[cols, rows];
             Vector2 playerPosition = new Vector2(2.5f, 3.5f);
-            tiles[(int)playerPosition.X, (int)playerPosition.Y] = 0;
-            tiles[(int)playerPosition.X + 1, (int)playerPosition.Y] = 0;
-            tiles[(int)playerPosition.X, (int)playerPosition.Y + 1] = 0;
-            tiles[(int)playerPosition.X + 1, (int)playerPosition.Y + 1] = 0;
+         
             var map = new BaseMap() { PlayersInitialViewingDirection = 0, PlayerStartingPoint = playerPosition, Tiles = tiles };
             var tilesInAll = cols * rows;
             float fillPercentage = .3f;
@@ -31,6 +28,11 @@ namespace Raycasting.MapMakers
                     }
                 }
             }
+
+            tiles[(int)playerPosition.X, (int)playerPosition.Y] = 0;
+            tiles[(int)playerPosition.X + 1, (int)playerPosition.Y] = 0;
+            tiles[(int)playerPosition.X, (int)playerPosition.Y + 1] = 0;
+            tiles[(int)playerPosition.X + 1, (int)playerPosition.Y + 1] = 0;
             return map;
         }
     }
