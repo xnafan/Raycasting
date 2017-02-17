@@ -300,7 +300,11 @@ namespace Raycasting
             int _pixelsPerDegreeOfViewingAngleFromSourceBitmap = CurrentTextureSet[textureIndex1].CurrentTexture.Width / _widthOfViewingArcInDegrees;
             var sourceRectangle1 = new Rectangle((int)(renderData.CollisionInfo.Value.PositionOnWall * CurrentTextureSet[textureIndex1].CurrentTexture.Width), 0, _pixelsPerDegreeOfViewingAngleFromSourceBitmap, CurrentTextureSet[textureIndex1].CurrentTexture.Height);
             float maxDistance = 7;
-            float opacity = (1 - (float)(renderData.CollisionInfo.Value.DistanceToCollision / maxDistance));
+            float opacity = 0;
+            if (renderData.CollisionInfo.Value.DistanceToCollision < maxDistance)
+            {
+               opacity = 1 - (float)Math.Pow((float)(renderData.CollisionInfo.Value.DistanceToCollision / maxDistance), 2);
+            }
             Game1.SpriteBatch.Draw(CurrentTextureSet[textureIndex1].CurrentTexture, renderData.DestinationRectangle, sourceRectangle1, Color.White * opacity);
         }
 
